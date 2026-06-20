@@ -1,0 +1,106 @@
+package ec.edu.ups.icc.fundamentos01.users.controllers;
+
+import java.util.*;
+
+import org.springframework.web.bind.annotation.*;  //GetMapping - PostMapping - PutMapping - PatchMapping - DeleteMapping
+
+import ec.edu.ups.icc.fundamentos01.users.dtos.CreateUserDto;
+import ec.edu.ups.icc.fundamentos01.users.dtos.PartialUpdateUserDto;
+import ec.edu.ups.icc.fundamentos01.users.dtos.UpdateUserDto;
+import ec.edu.ups.icc.fundamentos01.users.dtos.UserResponseDto;
+// import ec.edu.ups.icc.fundamentos01.users.mappers.UserMapper;
+// import ec.edu.ups.icc.fundamentos01.users.models.UserModel;
+import ec.edu.ups.icc.fundamentos01.users.services.UserService;
+
+/*
+ * Controlador REST encargado de exponer los endpoints HTTP
+ * para la gestión de usuarios.
+ *
+ */
+@RestController
+@RequestMapping("/users")
+public class UsersController {
+
+    // private List<UserModel> users = new ArrayList<>();
+    // private Long currentId = 1L;
+
+    
+    private final UserService service;
+
+    /*
+     * Inyección de dependencias por constructor.
+     *
+     * Spring Boot busca una implementación de UserService,
+     * encuentra UserServiceImpl porque tiene @Service,
+     * crea el objeto y lo inyecta automáticamente.
+     */
+    public UsersController(UserService service) {
+        this.service = service;
+    }
+
+    /*
+     * Endpoint para listar todos los usuarios.
+     *
+     * GET /users
+     */
+    @GetMapping
+    public List<UserResponseDto> findAll() {
+        return service.findAll();
+    }
+
+    /*
+     * Endpoint para buscar un usuario por id.
+     *
+     * GET /users/{id}
+     */
+    @GetMapping("/{id}")
+    public Object findOne(@PathVariable Long id) {
+        return service.findOne(id);
+    }
+
+    /*
+     * Endpoint para crear un nuevo usuario.
+     *
+     * POST /users
+     */
+    @PostMapping
+    public UserResponseDto create(@RequestBody CreateUserDto dto) {
+        return service.create(dto);
+    }
+
+    /*
+     * Endpoint para actualizar completamente un usuario.
+     *
+     * PUT /users/{id}
+     */
+    @PutMapping("/{id}")
+    public Object update(
+            @PathVariable Long id,
+            @RequestBody UpdateUserDto dto
+    ) {
+        return service.update(id, dto);
+    }
+
+    /*
+     * Endpoint para actualizar parcialmente un usuario.
+     *
+     * PATCH /users/{id}
+     */
+    @PatchMapping("/{id}")
+    public Object partialUpdate(
+            @PathVariable Long id,
+            @RequestBody PartialUpdateUserDto dto
+    ) {
+        return service.partialUpdate(id, dto);
+    }
+
+    /*
+     * Endpoint para eliminar un usuario.
+     *
+     * DELETE /users/{id}
+     */
+    @DeleteMapping("/{id}")
+    public Object delete(@PathVariable Long id) {
+        return service.delete(id);
+    }
+}
