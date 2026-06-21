@@ -100,3 +100,17 @@ Total de estudiantes: 2
 GET /api/students
 GET /api/students/count
 ```
+
+## Capturas de `GET` y `POST` en BRUNO
+
+### Crear y Listar Usuarios
+
+![Get Users](docs/gusers.png)
+
+![Post Users](docs/pusers.png)
+
+### Crear y Listar Productos
+
+![Get Products](docs/gproducts.png)
+
+![Post Products](docs/pproducts.png)

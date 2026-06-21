@@ -1,6 +1,6 @@
 package ec.edu.ups.icc.fundamentos01.users.controllers;
 
-import java.util.*;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.*;  //GetMapping - PostMapping - PutMapping - PatchMapping - DeleteMapping
 
@@ -8,8 +8,6 @@ import ec.edu.ups.icc.fundamentos01.users.dtos.CreateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.PartialUpdateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.UpdateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.UserResponseDto;
-// import ec.edu.ups.icc.fundamentos01.users.mappers.UserMapper;
-// import ec.edu.ups.icc.fundamentos01.users.models.UserModel;
 import ec.edu.ups.icc.fundamentos01.users.services.UserService;
 
 /*
@@ -21,10 +19,6 @@ import ec.edu.ups.icc.fundamentos01.users.services.UserService;
 @RequestMapping("/users")
 public class UsersController {
 
-    // private List<UserModel> users = new ArrayList<>();
-    // private Long currentId = 1L;
-
-    
     private final UserService service;
 
     /*
@@ -54,7 +48,7 @@ public class UsersController {
      * GET /users/{id}
      */
     @GetMapping("/{id}")
-    public Object findOne(@PathVariable Long id) {
+    public UserResponseDto findOne(@PathVariable Long id) { // Cambiado de Object a UserResponseDto
         return service.findOne(id);
     }
 
@@ -74,7 +68,7 @@ public class UsersController {
      * PUT /users/{id}
      */
     @PutMapping("/{id}")
-    public Object update(
+    public UserResponseDto update( // Cambiado de Object a UserResponseDto
             @PathVariable Long id,
             @RequestBody UpdateUserDto dto
     ) {
@@ -87,7 +81,7 @@ public class UsersController {
      * PATCH /users/{id}
      */
     @PatchMapping("/{id}")
-    public Object partialUpdate(
+    public UserResponseDto partialUpdate( // Cambiado de Object a UserResponseDto
             @PathVariable Long id,
             @RequestBody PartialUpdateUserDto dto
     ) {
@@ -100,7 +94,7 @@ public class UsersController {
      * DELETE /users/{id}
      */
     @DeleteMapping("/{id}")
-    public Object delete(@PathVariable Long id) {
-        return service.delete(id);
+    public void delete(@PathVariable Long id) { // Cambiado de Object a void
+        service.delete(id); // Se elimina la palabra 'return' porque el servicio ahora es void
     }
 }
