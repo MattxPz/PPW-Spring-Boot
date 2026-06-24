@@ -12,7 +12,7 @@ public class ProductMapper {
     public static ProductModel toModelFromDTO(CreateProductDto dto) {
         ProductModel model = new ProductModel();
         model.setName(dto.getName());
-        model.setDescription(dto.getDescription());
+        model.setStock(dto.getStock());
         model.setPrice(dto.getPrice());
         model.setCreatedAt(LocalDateTime.now());
 
@@ -23,7 +23,7 @@ public class ProductMapper {
         ProductModel model = new ProductModel();
         model.setId(entity.getId());
         model.setName(entity.getName());
-        model.setDescription(entity.getDescription());
+        model.setStock(entity.getStock());
         model.setPrice(entity.getPrice());
         model.setCreatedAt(entity.getCreatedAt());
         model.setUpdatedAt(entity.getUpdatedAt());
@@ -36,7 +36,7 @@ public class ProductMapper {
         ProductEntity entity = new ProductEntity();
         entity.setId(model.getId());
         entity.setName(model.getName());
-        entity.setDescription(model.getDescription());
+        entity.setStock(model.getStock());
         entity.setPrice(model.getPrice());
 
         return entity;
@@ -46,7 +46,7 @@ public class ProductMapper {
         ProductResponseDto response = new ProductResponseDto();
         response.setId(model.getId());
         response.setName(model.getName());
-        response.setDescription(model.getDescription());
+        response.setStock(model.getStock());
         response.setPrice(model.getPrice());
 
         return response;

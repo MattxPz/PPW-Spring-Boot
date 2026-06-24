@@ -1,17 +1,30 @@
 package ec.edu.ups.icc.fundamentos01.products.dtos;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+
 public class UpdateProductDto {
 
+    @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 3, max = 150, message = "El nombre debe tener entre 3 y 150 caracteres")
     private String name;
-    private String description;
+
+    @NotNull(message = "El stock es obligatorio")
+    @PositiveOrZero(message = "El stock debe ser un número positivo o cero")
+    private Integer stock;
+
+    @NotNull(message = "El precio es obligatorio")
+    @PositiveOrZero(message = "El precio debe ser un número positivo o cero")
     private Double price;
 
     public UpdateProductDto() {
     }
 
-    public UpdateProductDto(String name, String description, Double price) {
+    public UpdateProductDto(String name, Integer stock, Double price) {
         this.name = name;
-        this.description = description;
+        this.stock = stock;
         this.price = price;
     }
 
@@ -23,12 +36,12 @@ public class UpdateProductDto {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public Double getPrice() {

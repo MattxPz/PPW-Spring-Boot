@@ -12,8 +12,8 @@ public class ProductEntity extends BaseEntity {
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, length = 255)
-    private String description;
+    @Column(nullable = false)
+    private Integer stock;
 
     @Column(nullable = false)
     private Double price;
@@ -21,9 +21,9 @@ public class ProductEntity extends BaseEntity {
     public ProductEntity() {
     }
 
-    public ProductEntity(String name, String description, Double price) {
+    public ProductEntity(String name, Integer stock, Double price) {
         this.name = name;
-        this.description = description;
+        this.stock = stock;
         this.price = price;
     }
 
@@ -35,12 +35,12 @@ public class ProductEntity extends BaseEntity {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public Double getPrice() {

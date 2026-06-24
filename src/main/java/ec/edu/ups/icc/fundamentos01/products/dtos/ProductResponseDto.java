@@ -4,16 +4,16 @@ public class ProductResponseDto {
 
     private Long id;
     private String name;
-    private String description;
+    private Integer stock;
     private Double price;
 
     public ProductResponseDto() {
     }
 
-    public ProductResponseDto(Long id, String name, String description, Double price) {
+    public ProductResponseDto(Long id, String name, Integer stock, Double price) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.stock = stock;
         this.price = price;
     }
 
@@ -33,12 +33,12 @@ public class ProductResponseDto {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public Double getPrice() {

@@ -101,16 +101,87 @@ GET /api/students
 GET /api/students/count
 ```
 
-## Capturas de `GET` y `POST` en BRUNO
+---
 
-### Crear y Listar Usuarios
+## Resolucion de Practicas
 
-![Get Users](docs/gusers.png)
+### Practica 1 - 2
 
-![Post Users](docs/pusers.png)
+Para iniciar el proyecto, se verifica que Java esté instalado y ejecuta la aplicación con Gradle. Una vez iniciada, el servidor quedará disponible en `http://localhost:8080` y podrás comprobar su funcionamiento accediendo al endpoint `/api/status`.
 
-### Crear y Listar Productos
+```bash
+java -version
+./gradlew bootRun
+curl http://localhost:8080/api/status
+```
+
+![springboot](docs/springboot-start.png)
+
+![api-students](docs/api-students.png)
+
+---
+
+### Practica 3
+
+- Descripción
+
+Este proyecto implementa una API REST básica en Spring Boot para gestionar usuarios mediante operaciones CRUD, utilizando controladores, DTOs, modelos y mappers para separar responsabilidades y mantener una arquitectura organizada. Durante esta práctica no se emplea una base de datos, por lo que la información se almacena temporalmente en memoria mediante una lista de objetos.
+
+- Añadidos
+
+Durante el desarrollo de la actividad, se recplico la creacion de los usuarios para la creacion de Productos, con las variables de nombre, stock y precio, ejecutando los endpoints correspondientes, en las capturas se evidencian los endpoints de `api/users` y la de `api/products`
+
+![api-users](docs/api-users.png)
+
+![api-products](docs/api-products.png)
+
+---
+
+### Practica 4
+
+- Descripcion
+
+Esta práctica implementa una arquitectura más organizada para una API REST en Spring Boot mediante la incorporación de la capa de servicios y la inyección de dependencias. La lógica de negocio se traslada desde los controladores hacia clases anotadas con `@Service`, permitiendo que los controladores se limiten a recibir solicitudes HTTP y delegar las operaciones correspondientes. Además, se mantiene el uso de DTOs, modelos y mappers para separar responsabilidades y facilitar la mantenibilidad del código, utilizando almacenamiento temporal en memoria sin recurrir todavía a una base de datos.
+
+- Pruebas en BRUNO
+
+A continuación se incluyen las evidencias de las pruebas realizadas con Bruno para verificar el funcionamiento de los endpoints de la API REST. Las capturas muestran la ejecución de operaciones como creación, consulta, actualización y eliminación de recursos, comprobando que el controlador delega correctamente la lógica al servicio y que las respuestas se generan de forma adecuada.
+
+##### -- Productos
 
 ![Get Products](docs/gproducts.png)
 
 ![Post Products](docs/pproducts.png)
+
+##### -- Users
+
+![Get Products](docs/gusers.png)
+
+![Post Products](docs/pusers.png)
+
+---
+
+### Practica 5
+
+- Descripcion
+
+Esta práctica incorpora persistencia real de datos en una aplicación Spring Boot mediante PostgreSQL y Spring Data JPA. Se reemplaza el almacenamiento temporal en memoria por entidades JPA y repositorios, permitiendo que las operaciones CRUD se ejecuten directamente sobre una base de datos. Además, se mantiene una separación clara entre DTOs, modelos, entidades y servicios, utilizando mappers para transformar la información entre cada capa y una clase BaseEntity para centralizar atributos comunes de persistencia.
+
+![Docker Products](docs/docker-products.png)
+
+---
+
+### Practica 6
+
+- Descripcion
+
+Esta práctica incorpora validación de datos de entrada en una API REST desarrollada con Spring Boot mediante Jakarta Validation. Se añaden restricciones sobre los DTOs para verificar que la información recibida cumpla requisitos como campos obligatorios, formatos válidos y valores mínimos antes de ejecutar la lógica de negocio o persistir los datos en la base de datos. Asimismo, se complementan estas verificaciones con reglas implementadas en los servicios y restricciones definidas en las entidades JPA para fortalecer la integridad de la información.
+
+
+- Imagenes
+
+En esta sección se muestran las evidencias obtenidas al probar las validaciones de la API utilizando Bruno. Las capturas incluyen casos de solicitudes válidas e inválidas, respuestas de error generadas por Spring Boot ante datos incorrectos y la verificación del funcionamiento correcto del CRUD cuando las entradas cumplen las reglas definidas.
+
+![Bruno Products Valid](docs/bruno-invalid.png)
+
+![Bruno Products Valid](docs/bruno-valid.png)

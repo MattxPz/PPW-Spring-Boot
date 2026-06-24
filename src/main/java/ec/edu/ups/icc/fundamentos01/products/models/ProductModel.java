@@ -2,11 +2,15 @@ package ec.edu.ups.icc.fundamentos01.products.models;
 
 import java.time.LocalDateTime;
 
+import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
+import ec.edu.ups.icc.fundamentos01.products.entities.ProductEntity;
+
 public class ProductModel {
 
     private Long id;
     private String name;
-    private String description;
+    private Integer stock;
     private Double price;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -15,11 +19,11 @@ public class ProductModel {
     public ProductModel() {
     }
 
-    public ProductModel(Long id, String name, String description, Double price, LocalDateTime createdAt,
+    public ProductModel(Long id, String name, Integer stock, Double price, LocalDateTime createdAt,
             LocalDateTime updatedAt, boolean deleted) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.stock = stock;
         this.price = price;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -42,12 +46,12 @@ public class ProductModel {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
+    public Integer getStock() {
+        return stock;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public Double getPrice() {
@@ -81,4 +85,50 @@ public class ProductModel {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
+    public static ProductModel fromDto(CreateProductDto dto) {
+        ProductModel model = new ProductModel();
+        model.setName(dto.getName());
+        model.setPrice(dto.getPrice());
+        model.setStock(dto.getStock());
+        return model;
+    }
+
+    public static ProductModel fromEntity(ProductEntity entity) {
+        return new ProductModel(
+            entity.getId(),
+            entity.getName(),
+            entity.getStock(),
+            entity.getPrice(),
+            entity.getCreatedAt(),
+            entity.getUpdatedAt(),
+            entity.isDeleted() 
+        );
+    }
+
+    public ProductEntity toEntity() {
+        ProductEntity entity = new ProductEntity();
+        if (this.id != null) {
+            entity.setId(this.id);
+        }
+        entity.setName(this.name);
+        entity.setPrice(this.price);
+        entity.setStock(this.stock);
+        
+        if (this.createdAt != null) entity.setCreatedAt(this.createdAt);
+        if (this.updatedAt != null) entity.setUpdatedAt(this.updatedAt);
+        entity.setDeleted(this.deleted);
+        
+        return entity;
+    }
+
+    public ProductResponseDto toResponseDto() {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setId(this.id);
+        dto.setName(this.name);
+        dto.setPrice(this.price);
+        dto.setStock(this.stock);
+        return dto;
+    }
+
 }

@@ -2,6 +2,8 @@ package ec.edu.ups.icc.fundamentos01.users.models;
 
 import java.time.LocalDateTime;
 
+import ec.edu.ups.icc.fundamentos01.users.dtos.CreateUserDto;
+import ec.edu.ups.icc.fundamentos01.users.entities.UserEntity;
 
 /*
  * Modelo de dominio del recurso users.
@@ -104,6 +106,44 @@ public class UserModel {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+
+    public static UserModel fromDto(CreateUserDto dto) {
+        UserModel model = new UserModel();
+        model.setName(dto.getName());
+        model.setEmail(dto.getEmail());
+        model.setPassword(dto.getPassword());
+        return model;
+    }
+
+    public static UserModel fromEntity(UserEntity entity) {
+        return new UserModel(
+            entity.getId(),
+            entity.getName(),
+            entity.getEmail(),
+            entity.getCreatedAt(),
+            null,
+            entity.getPasswordHash(),
+            entity.getUpdatedAt(),
+            entity.isDeleted() 
+        );
+    }
+
+    public UserEntity toEntity() {
+        UserEntity entity = new UserEntity();
+        if (this.id != null) {
+            entity.setId(this.id);
+        }
+        entity.setName(this.name);
+        entity.setEmail(this.email);
+        entity.setPasswordHash(this.passwordHash);
+        
+        if (this.createdAt != null) entity.setCreatedAt(this.createdAt);
+        if (this.updatedAt != null) entity.setUpdatedAt(this.updatedAt);
+        entity.setDeleted(this.deleted);
+        
+        return entity;
     }
 
 }

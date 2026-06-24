@@ -60,16 +60,22 @@ public class UserServiceImpl implements UserService {
     }
 
     /*
-     * Crea un nuevo usuario.
-     *
-     * Convierte DTO a Model.
-     * Convierte Model a Entity.
-     * Guarda Entity en PostgreSQL.
-     * Convierte Entity guardada a Model.
-     * Devuelve Response DTO.
-     */
+        * Crea un nuevo usuario.
+        *
+        * Valida que el email no esté registrado.
+        * Convierte DTO a Model.
+        * Convierte Model a Entity.
+        * Guarda Entity en PostgreSQL.
+        * Convierte Entity guardada a Model.
+        * Devuelve Response DTO.
+    */
     @Override
     public UserResponseDto create(CreateUserDto dto) {
+
+        if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
+            throw new IllegalStateException("Email already registered");
+        }
+
         UserModel model = UserMapper.toModelFromDTO(dto);
 
         UserEntity entity = UserMapper.toEntityFromModel(model);
