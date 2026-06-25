@@ -42,7 +42,7 @@ public class ProductMapper {
         return entity;
     }
 
-    public static ProductResponseDto toResponseFromModel(ProductModel model) {
+    public static ProductResponseDto toResponse(ProductModel model) {
         ProductResponseDto response = new ProductResponseDto();
         response.setId(model.getId());
         response.setName(model.getName());

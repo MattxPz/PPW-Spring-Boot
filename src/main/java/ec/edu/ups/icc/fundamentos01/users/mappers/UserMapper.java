@@ -75,7 +75,7 @@ public class UserMapper {
      * No se expone password ni passwordHash.
      * Se le agregó el sufijo "FromModel" para diferenciarlo y seguir el estándar de los métodos nuevos.
      */
-    public static UserResponseDto toResponseFromModel(UserModel model) {
+    public static UserResponseDto toResponse(UserModel model) {
         UserResponseDto response = new UserResponseDto();
 
         response.setId(model.getId());
