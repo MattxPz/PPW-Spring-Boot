@@ -82,10 +82,6 @@ Total de estudiantes: 2
 
 ![Endpoint students](docs/api-students.png)
 
-### Endpoint `/api/students/count`
-
-
-![Endpoint students count](docs/api-students-count.png)
 
 ## Tecnologias utilizadas
 
@@ -105,7 +101,7 @@ GET /api/students/count
 
 ## Resolucion de Practicas
 
-### Practica 1 - 2
+### Practica 01 - 02
 
 Para iniciar el proyecto, se verifica que Java esté instalado y ejecuta la aplicación con Gradle. Una vez iniciada, el servidor quedará disponible en `http://localhost:8080` y podrás comprobar su funcionamiento accediendo al endpoint `/api/status`.
 
@@ -121,7 +117,7 @@ curl http://localhost:8080/api/status
 
 ---
 
-### Practica 3
+### Practica 03
 
 - Descripción
 
@@ -137,7 +133,7 @@ Durante el desarrollo de la actividad, se recplico la creacion de los usuarios p
 
 ---
 
-### Practica 4
+### Practica 04
 
 - Descripcion
 
@@ -161,7 +157,7 @@ A continuación se incluyen las evidencias de las pruebas realizadas con Bruno p
 
 ---
 
-### Practica 5
+### Practica 05
 
 - Descripcion
 
@@ -171,7 +167,7 @@ Esta práctica incorpora persistencia real de datos en una aplicación Spring Bo
 
 ---
 
-### Practica 6
+### Practica 06
 
 - Descripcion
 
@@ -185,3 +181,21 @@ En esta sección se muestran las evidencias obtenidas al probar las validaciones
 ![Bruno Products Valid](docs/bruno-invalid.png)
 
 ![Bruno Products Valid](docs/bruno-valid.png)
+
+---
+
+### Practica 07
+
+- Descripcion
+
+Esta práctica introduce el manejo centralizado de excepciones y la generación de respuestas de error consistentes en una aplicación Spring Boot. Se implementan mecanismos para capturar errores de validación, recursos inexistentes y reglas de negocio incumplidas mediante excepciones personalizadas y controladores globales, permitiendo que la API devuelva respuestas claras, estructuradas y adecuadas para el cliente sin exponer detalles internos de la aplicación.
+
+- Resultados
+
+En esta sección se presentan las evidencias obtenidas mediante pruebas realizadas con Bruno, mostrando tanto operaciones exitosas como distintos escenarios de error. Las capturas permiten verificar el correcto funcionamiento del manejo centralizado de excepciones, incluyendo respuestas ante validaciones fallidas, recursos no encontrados y otras situaciones controladas por la API.
+
+![Error Product Duplicated](docs/product-duplicated.png)
+
+![No Product Validation](docs/no-product-validation.png)
+
+---
