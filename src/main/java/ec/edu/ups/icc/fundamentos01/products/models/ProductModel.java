@@ -2,9 +2,13 @@ package ec.edu.ups.icc.fundamentos01.products.models;
 
 import java.time.LocalDateTime;
 
+import ec.edu.ups.icc.fundamentos01.categories.mappers.CategoryMapper;
+import ec.edu.ups.icc.fundamentos01.categories.models.CategoryModel;
 import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
 import ec.edu.ups.icc.fundamentos01.products.entities.ProductEntity;
+import ec.edu.ups.icc.fundamentos01.users.mappers.UserMapper;
+import ec.edu.ups.icc.fundamentos01.users.models.UserModel;
 
 public class ProductModel {
 
@@ -16,11 +20,14 @@ public class ProductModel {
     private LocalDateTime updatedAt;
     private boolean deleted;
 
+    private UserModel owner;
+    private CategoryModel category;
+
     public ProductModel() {
     }
 
     public ProductModel(Long id, String name, Integer stock, Double price, LocalDateTime createdAt,
-            LocalDateTime updatedAt, boolean deleted) {
+            LocalDateTime updatedAt, boolean deleted, UserModel owner, CategoryModel category) {
         this.id = id;
         this.name = name;
         this.stock = stock;
@@ -28,6 +35,8 @@ public class ProductModel {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deleted = deleted;
+        this.owner = owner;
+        this.category = category;
     }
 
     public Long getId() {
@@ -86,6 +95,22 @@ public class ProductModel {
         this.deleted = deleted;
     }
 
+    public UserModel getOwner() {
+        return owner;
+    }
+
+    public void setOwner(UserModel owner) {
+        this.owner = owner;
+    }
+
+    public CategoryModel getCategory() {
+        return category;
+    }
+
+    public void setCategory(CategoryModel category) {
+        this.category = category;
+    }
+
     public static ProductModel fromDto(CreateProductDto dto) {
         ProductModel model = new ProductModel();
         model.setName(dto.getName());
@@ -102,7 +127,9 @@ public class ProductModel {
             entity.getPrice(),
             entity.getCreatedAt(),
             entity.getUpdatedAt(),
-            entity.isDeleted() 
+            entity.isDeleted(),
+            entity.getOwner() != null ? UserModel.fromEntity(entity.getOwner()) : null,
+            entity.getCategory() != null ? CategoryModel.fromEntity(entity.getCategory()) : null
         );
     }
 
@@ -128,6 +155,15 @@ public class ProductModel {
         dto.setName(this.name);
         dto.setPrice(this.price);
         dto.setStock(this.stock);
+
+        if (this.owner != null) {
+            dto.setOwner(UserMapper.toResponse(this.owner));
+        }
+
+        if (this.category != null) {
+            dto.setCategory(CategoryMapper.toResponse(this.category));
+        }
+
         return dto;
     }
 

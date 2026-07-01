@@ -19,13 +19,17 @@ public class UpdateProductDto {
     @PositiveOrZero(message = "El precio debe ser un número positivo o cero")
     private Double price;
 
+    @NotNull(message = "El ID de la categoría es obligatorio")
+    private Long categoryId;
+
     public UpdateProductDto() {
     }
 
-    public UpdateProductDto(String name, Integer stock, Double price) {
+    public UpdateProductDto(String name, Integer stock, Double price, Long categoryId) {
         this.name = name;
         this.stock = stock;
         this.price = price;
+        this.categoryId = categoryId;
     }
 
     public String getName() {
@@ -50,5 +54,13 @@ public class UpdateProductDto {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }

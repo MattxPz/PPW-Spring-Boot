@@ -17,13 +17,16 @@ public class PartialUpdateProductDto {
     @PositiveOrZero(message = "El precio debe ser un número positivo o cero")
     private Double price;
 
+    private Long categoryId;
+    
     public PartialUpdateProductDto() {
     }
 
-    public PartialUpdateProductDto(String name, Integer stock, Double price) {
+    public PartialUpdateProductDto(String name, Integer stock, Double price, Long categoryId) {
         this.name = name;
         this.stock = stock;
         this.price = price;
+        this.categoryId = categoryId;
     }
 
     public String getName() {
@@ -48,5 +51,13 @@ public class PartialUpdateProductDto {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 }

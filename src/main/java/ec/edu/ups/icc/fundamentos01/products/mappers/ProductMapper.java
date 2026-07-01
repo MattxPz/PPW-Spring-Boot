@@ -2,9 +2,11 @@ package ec.edu.ups.icc.fundamentos01.products.mappers;
 
 import java.time.LocalDateTime;
 
+import ec.edu.ups.icc.fundamentos01.categories.mappers.CategoryMapper;
 import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
 import ec.edu.ups.icc.fundamentos01.products.models.ProductModel;
+import ec.edu.ups.icc.fundamentos01.users.mappers.UserMapper;
 import ec.edu.ups.icc.fundamentos01.products.entities.ProductEntity;
 
 public class ProductMapper {
@@ -29,6 +31,14 @@ public class ProductMapper {
         model.setUpdatedAt(entity.getUpdatedAt());
         model.setDeleted(entity.isDeleted());
 
+        if (entity.getOwner() != null) {
+            model.setOwner(UserMapper.toModelFromEntity(entity.getOwner()));
+        }
+
+        if (entity.getCategory() != null) {
+            model.setCategory(CategoryMapper.toModelFromEntity(entity.getCategory()));
+        }
+
         return model;
     }
 
@@ -49,6 +59,16 @@ public class ProductMapper {
         response.setStock(model.getStock());
         response.setPrice(model.getPrice());
 
+        if (model.getOwner() != null) {
+            response.setOwner(UserMapper.toResponse(model.getOwner()));
+        }
+
+        if (model.getCategory() != null) {
+            response.setCategory(CategoryMapper.toResponse(model.getCategory()));
+        }
+
+        response.setCreatedAt(model.getCreatedAt());
+        response.setUpdatedAt(model.getUpdatedAt());
         return response;
     }
 }
