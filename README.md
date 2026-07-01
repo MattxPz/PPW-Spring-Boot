@@ -199,3 +199,23 @@ En esta sección se presentan las evidencias obtenidas mediante pruebas realizad
 ![No Product Validation](docs/no-product-validation.png)
 
 ---
+
+### Practica 08
+
+- Capturas
+
+1. Captura de la descripción de la tabla products en PostgreSQL
+
+![Products on PostgreSQL](docs/products-postgresql.png)
+
+2. Captura de la creación de un producto con relaciones
+![Bruno Product Relations](docs/bruno-product-relations.png)
+
+3. Captura de la consulta de productos por categoría
+![Endpoint Products Category](docs/products-category-endpoint.png)
+
+- Explicación breve
+
+`ProductEntity` se relaciona con `UserEntity` y `CategoryEntity` mediante `@ManyToOne`, indicando que varios productos pueden pertenecer a un mismo usuario o categoría. La anotación `@JoinColumn` define las claves foráneas (`user_id` y `category_id`) que enlazan la tabla products con las tablas `users` y `categories`.
+
+---
