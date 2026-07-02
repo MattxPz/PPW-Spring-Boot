@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByUserDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
+import ec.edu.ups.icc.fundamentos01.products.services.ProductService;
 import ec.edu.ups.icc.fundamentos01.users.dtos.CreateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.PartialUpdateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.UpdateUserDto;
@@ -15,10 +18,13 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UsersController {
 
+    private final ProductService productService;
+
     private final UserService service;
 
-    public UsersController(UserService service) {
+    public UsersController(UserService service, ProductService productService) {
         this.service = service;
+        this.productService = productService;
     }
 
     @GetMapping
@@ -55,5 +61,13 @@ public class UsersController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id); 
+    }
+
+    @GetMapping("/{id}/products")
+    public List<ProductResponseDto> findProductsByUser(
+            @PathVariable Long id,
+            @Valid @ModelAttribute ProductFilterByUserDto filters
+    ) {
+        return productService.findByUserIdWithFilters(id, filters);
     }
 }

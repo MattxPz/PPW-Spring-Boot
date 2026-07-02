@@ -4,9 +4,15 @@ import java.util.List;
 
 import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.PartialUpdateProductDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByCategoryDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByUserDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.UpdateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
 
+/*
+ * Servicio que define las operaciones disponibles
+ * para la gestión de productos.
+ */
 public interface ProductService {
 
     List<ProductResponseDto> findAll();
@@ -25,4 +31,13 @@ public interface ProductService {
 
     List<ProductResponseDto> findByCategoryId(Long categoryId);
 
+    List<ProductResponseDto> findByUserIdWithFilters(
+            Long userId,
+            ProductFilterByUserDto filters
+    );
+
+    List<ProductResponseDto> findByCategoryIdWithFilters(
+            Long categoryId,
+            ProductFilterByCategoryDto filters
+    );
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +16,10 @@ import ec.edu.ups.icc.fundamentos01.categories.dtos.CategoryResponseDto;
 import ec.edu.ups.icc.fundamentos01.categories.dtos.CreateCategoryDto;
 import ec.edu.ups.icc.fundamentos01.categories.dtos.UpdateCategoryDto;
 import ec.edu.ups.icc.fundamentos01.categories.services.CategoryService;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByCategoryDto;
+//import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByUserDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
+import ec.edu.ups.icc.fundamentos01.products.services.ProductService;
 import jakarta.validation.Valid;
 
 /*
@@ -25,10 +30,13 @@ import jakarta.validation.Valid;
 @RequestMapping("/categories")
 public class CategoriesController {
 
+    private final ProductService productService;
+
     private final CategoryService service;
 
-    public CategoriesController(CategoryService service) {
+    public CategoriesController(CategoryService service, ProductService productService) {
         this.service = service;
+        this.productService = productService;
     }
 
     @GetMapping
@@ -57,5 +65,13 @@ public class CategoriesController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.delete(id);
+    }
+
+    @GetMapping("/{id}/products")
+    public List<ProductResponseDto> findProductsByCategory(
+            @PathVariable Long id,
+            @Valid @ModelAttribute ProductFilterByCategoryDto filters
+    ) {
+        return productService.findByCategoryIdWithFilters(id, filters);
     }
 }
