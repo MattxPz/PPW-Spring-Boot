@@ -80,7 +80,7 @@ Total de estudiantes: 2
 ### Endpoint `/api/students`
 
 
-![Endpoint students](docs/api-students.png)
+![Endpoint students](docs/images/2.1.png)
 
 
 ## Tecnologias utilizadas
@@ -111,9 +111,9 @@ java -version
 curl http://localhost:8080/api/status
 ```
 
-![springboot](docs/springboot-start.png)
+![springboot](docs/images/1.1.png)
 
-![api-students](docs/api-students.png)
+![api-students](docs/images/2.1.png)
 
 ---
 
@@ -127,9 +127,9 @@ Este proyecto implementa una API REST básica en Spring Boot para gestionar usua
 
 Durante el desarrollo de la actividad, se recplico la creacion de los usuarios para la creacion de Productos, con las variables de nombre, stock y precio, ejecutando los endpoints correspondientes, en las capturas se evidencian los endpoints de `api/users` y la de `api/products`
 
-![api-users](docs/api-users.png)
+![api-users](docs/images/3.1.png)
 
-![api-products](docs/api-products.png)
+![api-products](docs/images/3.2.png)
 
 ---
 
@@ -145,15 +145,15 @@ A continuación se incluyen las evidencias de las pruebas realizadas con Bruno p
 
 ##### -- Productos
 
-![Get Products](docs/gproducts.png)
+![Get Products](docs/images/4.1.png)
 
-![Post Products](docs/pproducts.png)
+![Post Products](docs/images/4.2.png)
 
 ##### -- Users
 
-![Get Products](docs/gusers.png)
+![Get Products](docs/images/4.3.png)
 
-![Post Products](docs/pusers.png)
+![Post Products](docs/images/4.4.png)
 
 ---
 
@@ -163,7 +163,7 @@ A continuación se incluyen las evidencias de las pruebas realizadas con Bruno p
 
 Esta práctica incorpora persistencia real de datos en una aplicación Spring Boot mediante PostgreSQL y Spring Data JPA. Se reemplaza el almacenamiento temporal en memoria por entidades JPA y repositorios, permitiendo que las operaciones CRUD se ejecuten directamente sobre una base de datos. Además, se mantiene una separación clara entre DTOs, modelos, entidades y servicios, utilizando mappers para transformar la información entre cada capa y una clase BaseEntity para centralizar atributos comunes de persistencia.
 
-![Docker Products](docs/docker-products.png)
+![Docker Products](docs/images/5.1.png)
 
 ---
 
@@ -178,9 +178,9 @@ Esta práctica incorpora validación de datos de entrada en una API REST desarro
 
 En esta sección se muestran las evidencias obtenidas al probar las validaciones de la API utilizando Bruno. Las capturas incluyen casos de solicitudes válidas e inválidas, respuestas de error generadas por Spring Boot ante datos incorrectos y la verificación del funcionamiento correcto del CRUD cuando las entradas cumplen las reglas definidas.
 
-![Bruno Products Valid](docs/bruno-invalid.png)
+![Bruno Products Valid](docs/images/6.1.png)
 
-![Bruno Products Valid](docs/bruno-valid.png)
+![Bruno Products Valid](docs/images/6.2.png)
 
 ---
 
@@ -194,9 +194,9 @@ Esta práctica introduce el manejo centralizado de excepciones y la generación 
 
 En esta sección se presentan las evidencias obtenidas mediante pruebas realizadas con Bruno, mostrando tanto operaciones exitosas como distintos escenarios de error. Las capturas permiten verificar el correcto funcionamiento del manejo centralizado de excepciones, incluyendo respuestas ante validaciones fallidas, recursos no encontrados y otras situaciones controladas por la API.
 
-![Error Product Duplicated](docs/product-duplicated.png)
+![Error Product Duplicated](docs/images/7.1.png)
 
-![No Product Validation](docs/no-product-validation.png)
+![No Product Validation](docs/images/7.2.png)
 
 ---
 
@@ -206,16 +206,69 @@ En esta sección se presentan las evidencias obtenidas mediante pruebas realizad
 
 1. Captura de la descripción de la tabla products en PostgreSQL
 
-![Products on PostgreSQL](docs/products-postgresql.png)
+![Products on PostgreSQL](docs/images/8.1.png)
 
 2. Captura de la creación de un producto con relaciones
-![Bruno Product Relations](docs/bruno-product-relations.png)
+![Bruno Product Relations](docs/images/8.2.png)
 
 3. Captura de la consulta de productos por categoría
-![Endpoint Products Category](docs/products-category-endpoint.png)
+![Endpoint Products Category](docs/images/8.3.png)
 
 - Explicación breve
 
 `ProductEntity` se relaciona con `UserEntity` y `CategoryEntity` mediante `@ManyToOne`, indicando que varios productos pueden pertenecer a un mismo usuario o categoría. La anotación `@JoinColumn` define las claves foráneas (`user_id` y `category_id`) que enlazan la tabla products con las tablas `users` y `categories`.
+
+---
+
+### Practica 09
+
+- Capturas
+
+1. Captura de producto creado con varias categorías
+![Product Created on Categories](docs/images/9.1.png)
+
+2. Captura de consulta con filtros por usuario
+![Products with Filters by User](docs/images/9.2.png)
+
+3. Captura de consulta con filtros por categoría
+![Products with Filters by Category](docs/images/9.3.png)
+
+- Explicación breve
+
+**¿Por qué se usa ProductService y ProductRepository para consultar productos aunque el endpoint esté dentro del contexto /users/{id}/products o /categories/{id}/products?**
+Aunque la ruta expresa un contexto semántico basado en el usuario o la categoría para mantener una `API RESTFUL` e intuitiva, el recurso principal que se está consultando, filtrando y devolviendo son los productos. Por lo tanto, la responsabilidad de la lógica de negocio y el acceso a la base de datos recae estrictamente en ProductService y ProductRepository, respetando el principio de responsabilidad única de cada componente.
+
+**¿Qué cambió al pasar de Product N ──── 1 Category a Product N ──── N Category?**`
+Se eliminó la relación directa que usaba una única clave foránea en la entidad de productos con la anotación `@ManyToOne`. En su lugar, se implementó una relación `@ManyToMany`, lo que genera automáticamente una tabla intermedia en la base de datos para enlazar ambas entidades sin duplicar registros. A nivel de código, el atributo individual `CategoryEntity category` se transformó en una colección `Set<CategoryEntity>` categories. Esto obligó a modificar los DTOs para recibir arreglos de IDs, cambiar los mappers para devolver listas de categorías y actualizar las consultas JPQL en los repositorios utilizando JOIN con la cláusula `DISTINCT` para evitar productos duplicados en los resultados.
+
+---
+
+
+### Practica 10
+
+- Capturas
+
+1. Captura de respuesta con Page
+![Products with Page](docs/images/10.1.png)
+
+2. Captura de respuesta con Slice
+![Products with Slice](docs/images/10.2.png)
+
+3. Captura de error por paginación inválida
+![Products with Page Invalid](docs/images/10.3.png)
+
+4. Captura de endpoint de categoría paginado con Page
+![Products with Page Category](docs/images/10.4.png)
+
+5. Captura de endpoint de categoría paginado con Slice
+![Products with Slice Category](docs/images/10.5.png)
+
+- Explicación breve
+
+**¿Cuál es la diferencia entre Page y Slice?**
+Page representa una respuesta paginada completa e incluye metadatos como el total de elementos y el total de páginas. Para lograr esto, ejecuta dos consultas en la base de datos: una para obtener los datos con `LIMIT` y `OFFSET`, y otra de tipo `COUNT` para saber el tamaño total de la tabla. Por otro lado, Slice es una versión más ligera que no incluye el total de elementos ni páginas, ya que omite la consulta `COUNT`. Simplemente solicita un registro adicional a la base de datos para determinar si existe una página siguiente, siendo ideal y más eficiente para funcionalidades como navegación secuencial o scroll infinito.
+
+**¿Por qué la paginación debe aplicarse en el repositorio y no después de traer todos los datos en memoria?**
+Si la paginación se realiza en memoria, el sistema intentará consultar y cargar todos los registros existentes desde la base de datos al backend simultáneamente. Esto genera un consumo excesivo de recursos, sobrecarga de red, lentitud y posibles caídas por falta de memoria. Al aplicar la paginación a nivel de repositorio usando Pageable, el motor de base de datos se encarga de filtrar la cantidad exacta de registros requeridos mediante comandos SQL, enviando al servidor únicamente la pequeña fracción de datos solicitada, lo que garantiza el rendimiento y la escalabilidad de la API.
 
 ---
