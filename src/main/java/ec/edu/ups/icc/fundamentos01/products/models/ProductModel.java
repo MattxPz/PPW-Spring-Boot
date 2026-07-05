@@ -1,6 +1,8 @@
 package ec.edu.ups.icc.fundamentos01.products.models;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ec.edu.ups.icc.fundamentos01.categories.mappers.CategoryMapper;
 import ec.edu.ups.icc.fundamentos01.categories.models.CategoryModel;
@@ -21,13 +23,14 @@ public class ProductModel {
     private boolean deleted;
 
     private UserModel owner;
-    private CategoryModel category;
+    
+    private List<CategoryModel> categories;
 
     public ProductModel() {
     }
 
     public ProductModel(Long id, String name, Integer stock, Double price, LocalDateTime createdAt,
-            LocalDateTime updatedAt, boolean deleted, UserModel owner, CategoryModel category) {
+            LocalDateTime updatedAt, boolean deleted, UserModel owner, List<CategoryModel> categories) {
         this.id = id;
         this.name = name;
         this.stock = stock;
@@ -36,7 +39,7 @@ public class ProductModel {
         this.updatedAt = updatedAt;
         this.deleted = deleted;
         this.owner = owner;
-        this.category = category;
+        this.categories = categories;
     }
 
     public Long getId() {
@@ -103,12 +106,12 @@ public class ProductModel {
         this.owner = owner;
     }
 
-    public CategoryModel getCategory() {
-        return category;
+    public List<CategoryModel> getCategories() {
+        return categories;
     }
 
-    public void setCategory(CategoryModel category) {
-        this.category = category;
+    public void setCategories(List<CategoryModel> categories) {
+        this.categories = categories;
     }
 
     public static ProductModel fromDto(CreateProductDto dto) {
@@ -129,7 +132,7 @@ public class ProductModel {
             entity.getUpdatedAt(),
             entity.isDeleted(),
             entity.getOwner() != null ? UserModel.fromEntity(entity.getOwner()) : null,
-            entity.getCategory() != null ? CategoryModel.fromEntity(entity.getCategory()) : null
+            entity.getCategories() != null ? entity.getCategories().stream().map(CategoryModel::fromEntity).collect(Collectors.toList()) : null
         );
     }
 
@@ -160,8 +163,8 @@ public class ProductModel {
             dto.setOwner(UserMapper.toResponse(this.owner));
         }
 
-        if (this.category != null) {
-            dto.setCategory(CategoryMapper.toResponse(this.category));
+        if (this.categories != null) {
+            dto.setCategories(this.categories.stream().map(CategoryMapper::toResponse).collect(Collectors.toList()));
         }
 
         return dto;

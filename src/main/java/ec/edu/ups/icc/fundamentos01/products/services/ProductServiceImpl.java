@@ -1,10 +1,21 @@
 package ec.edu.ups.icc.fundamentos01.products.services;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.Sort;
 
 import ec.edu.ups.icc.fundamentos01.categories.entity.CategoryEntity;
 import ec.edu.ups.icc.fundamentos01.categories.repositories.CategoryRepository;
+import ec.edu.ups.icc.fundamentos01.core.dtos.PaginationDto;
 import ec.edu.ups.icc.fundamentos01.core.exceptions.domain.BadRequestException;
 import ec.edu.ups.icc.fundamentos01.core.exceptions.domain.ConflictException;
 import ec.edu.ups.icc.fundamentos01.core.exceptions.domain.NotFoundException;
@@ -30,6 +41,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final CategoryRepository categoryRepository;
 
+
+
     public ProductServiceImpl(
             ProductRepository productRepository,
             UserRepository userRepository,
@@ -51,7 +64,7 @@ public class ProductServiceImpl implements ProductService {
                 throw new NotFoundException("User not found");
             }
 
-            List<ProductEntity> list = productRepository.findByOwner_IdAndDeletedFalse(userId);
+                List<ProductEntity> list = productRepository.findByOwner_IdAndDeletedFalse(userId);
 
             return list
                     .stream()
@@ -72,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
             throw new NotFoundException("Category not found");
         }
 
-        return productRepository.findByCategory_IdAndDeletedFalse(categoryId)
+        return productRepository.findByCategories_IdAndDeletedFalse(categoryId)
                 .stream()
                 .map(ProductMapper::toModelFromEntity)
                 .map(ProductMapper::toResponse)
@@ -120,13 +133,8 @@ public class ProductServiceImpl implements ProductService {
             throw new NotFoundException("User not found");
         }
 
-            // 2 Encontramos la categoria
-        CategoryEntity category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found"));
-
-        if (category.isDeleted()) {
-            throw new NotFoundException("Category not found");
-        }
+            // 2 Encontramos las categorias
+        Set<CategoryEntity> categories = validateAndGetCategories(dto.getCategoryIds());
 
     // validadacion de negocio, por ejemplo que no exista un producto  con el mismo nombre
         if (productRepository.findByNameIgnoreCaseAndDeletedFalse(dto.getName()).isPresent()) {
@@ -142,7 +150,7 @@ public class ProductServiceImpl implements ProductService {
         entity.setPrice(dto.getPrice());
         entity.setStock(dto.getStock());
         entity.setOwner(owner);
-        entity.setCategory(category);
+        entity.setCategories(categories);
 
     ProductEntity savedEntity = productRepository.save(entity);
 
@@ -163,17 +171,12 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity entity = productRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
-        CategoryEntity category = categoryRepository.findById(dto.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Category not found"));
-
-        if (category.isDeleted()) {
-            throw new NotFoundException("Category not found");
-        }
+        Set<CategoryEntity> categories = validateAndGetCategories(dto.getCategoryIds());
 
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setStock(dto.getStock());
-        entity.setCategory(category);
+        entity.setCategories(categories);
 
             ProductEntity savedEntity = productRepository.save(entity);
 
@@ -205,15 +208,8 @@ public class ProductServiceImpl implements ProductService {
             entity.setStock(dto.getStock());
         }
 
-        if (dto.getCategoryId() != null) {
-            CategoryEntity category = categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new NotFoundException("Category not found"));
-
-            if (category.isDeleted()) {
-                throw new NotFoundException("Category not found");
-            }
-
-            entity.setCategory(category);
+        if (dto.getCategoryIds() != null) {
+            entity.setCategories(validateAndGetCategories(dto.getCategoryIds()));
         }
 
         ProductEntity savedEntity = productRepository.save(entity);
@@ -233,121 +229,317 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /*
- * Retorna productos activos de un usuario aplicando filtros opcionales.
- *
- * Primero valida que el usuario exista y no esté eliminado.
- * Luego valida el rango de precios.
- * Finalmente consulta los productos desde ProductRepository.
- */
-@Override
-public List<ProductResponseDto> findByUserIdWithFilters(
-        Long userId,
-        ProductFilterByUserDto filters
-) {
-    if (!userRepository.existsByIdAndDeletedFalse(userId)) {
-        throw new NotFoundException("User not found");
+    * Retorna productos activos de un usuario aplicando filtros opcionales.
+    *
+    * Primero valida que el usuario exista y no esté eliminado.
+    * Luego valida el rango de precios.
+    * Finalmente consulta los productos desde ProductRepository.
+    */
+    @Override
+    public List<ProductResponseDto> findByUserIdWithFilters(
+            Long userId,
+            ProductFilterByUserDto filters
+    ) {
+        if (!userRepository.existsByIdAndDeletedFalse(userId)) {
+            throw new NotFoundException("User not found");
+        }
+
+        validateUserFilters(filters);
+
+        String name = normalizeName(filters.getName());
+
+        return productRepository.findByOwnerIdWithFilters(
+                        userId,
+                        name,
+                        filters.getMinPrice(),
+                        filters.getMaxPrice(),
+                        filters.getCategoryId()
+                )
+                .stream()
+            .map(ProductMapper::toModelFromEntity)
+                    .map(ProductMapper::toResponse)
+                .toList();
     }
 
-    validateUserFilters(filters);
 
-    String name = normalizeName(filters.getName());
+    /*
+    * Retorna productos activos de una categoría aplicando filtros opcionales.
+    *
+    * Primero valida que la categoría exista y no esté eliminada.
+    * Luego valida el rango de precios.
+    * Si viene userId como filtro, valida que el usuario exista.
+    * Finalmente consulta los productos desde ProductRepository.
+    */
+    @Override
+    public List<ProductResponseDto> findByCategoryIdWithFilters(
+            Long categoryId,
+            ProductFilterByCategoryDto filters
+    ) {
+        if (!categoryRepository.existsByIdAndDeletedFalse(categoryId)) {
+            throw new NotFoundException("Category not found");
+        }
 
-    return productRepository.findByOwnerIdWithFilters(
-                    userId,
-                    name,
-                    filters.getMinPrice(),
-                    filters.getMaxPrice(),
-                    filters.getCategoryId()
-            )
-            .stream()
-           .map(ProductMapper::toModelFromEntity)
+        validateCategoryFilters(filters);
+
+        String name = normalizeName(filters.getName());
+
+        return productRepository.findByCategoryIdWithFilters(
+                        categoryId,
+                        name,
+                        filters.getMinPrice(),
+                        filters.getMaxPrice(),
+                        filters.getUserId()
+                )
+                .stream()
+                .map(ProductMapper::toModelFromEntity)
                 .map(ProductMapper::toResponse)
-            .toList();
-}
-
-
-/*
- * Retorna productos activos de una categoría aplicando filtros opcionales.
- *
- * Primero valida que la categoría exista y no esté eliminada.
- * Luego valida el rango de precios.
- * Finalmente consulta los productos desde ProductRepository.
- */
-public List<ProductResponseDto> findByCategoryIdWithFilters(
-        Long categoryId,
-        ProductFilterByCategoryDto filters
-) {
-    if (!categoryRepository.existsByIdAndDeletedFalse(categoryId)) {
-        throw new NotFoundException("Category not found");
+                .toList();
     }
 
-    validateUserFilters(filters);
+    private void validateCategoryFilters(ProductFilterByCategoryDto filters) {
+        if (filters == null) {
+            return;
+        }
 
-    String name = normalizeName(filters.getName());
+        if (!filters.hasValidPriceRange()) {
+            throw new BadRequestException("El precio máximo debe ser mayor o igual al precio mínimo");
+        }
 
-    return productRepository.findByCategoryIdWithFilters(
-                    categoryId,
-                    name,
-                    filters.getMinPrice(),
-                    filters.getMaxPrice(),
-                    filters.getUserId()
-            )
-            .stream()
-           .map(ProductMapper::toModelFromEntity)
-                .map(ProductMapper::toResponse)
-            .toList();
-}
-
-private void validateUserFilters(ProductFilterByCategoryDto filters) {
-    if (filters == null) {
-        return;
-    }
-
-    if (!filters.hasValidPriceRange()) {
-        throw new BadRequestException("El precio máximo debe ser mayor o igual al precio mínimo");
-    }
-
-    if (filters.getUserId() != null &&
-            !categoryRepository.existsByIdAndDeletedFalse(filters.getUserId())) {
-        throw new NotFoundException("User not found");
-    }
-}
-
-/*
- * Valida reglas de negocio relacionadas con filtros.
- */
-private void validateUserFilters(ProductFilterByUserDto filters) {
-
-    if (filters == null) {
-        return;
-    }
-
-    if (!filters.hasValidPriceRange()) {
-        throw new BadRequestException("El precio máximo debe ser mayor o igual al precio mínimo");
-    }
-
-    if (filters.getCategoryId() != null &&
-            !categoryRepository.existsByIdAndDeletedFalse(filters.getCategoryId())) {
-        throw new NotFoundException("Category not found");
+        if (filters.getUserId() != null &&
+                !userRepository.existsByIdAndDeletedFalse(filters.getUserId())) {
+            throw new NotFoundException("User not found");
+        }
     }
 
 
-}
+    /*
+    * Valida que todas las categorías existan y estén activas.
+    *
+    * Retorna el conjunto de entidades CategoryEntity
+    * que se asociarán al producto.
+    */
+    private Set<CategoryEntity> validateAndGetCategories(Set<Long> categoryIds) {
 
-/*
- * Convierte un texto vacío en null.
- *
- * Esto permite que el repositorio ignore el filtro por nombre
- * cuando el query param llega vacío.
- */
-private String normalizeName(String name) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            throw new BadRequestException("Debe seleccionar al menos una categoría");
+        }
 
-    if (name == null || name.isBlank()) {
-        return null;
+        Set<CategoryEntity> categories = new HashSet<>();
+
+        for (Long categoryId : categoryIds) {
+            CategoryEntity category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new NotFoundException("Category not found"));
+
+            if (category.isDeleted()) {
+                throw new NotFoundException("Category not found");
+            }
+
+            categories.add(category);
+        }
+
+        return categories;
     }
 
-    return name.trim();
-}
+
+    /*
+    * Valida reglas de negocio relacionadas con filtros.
+    */
+    private void validateUserFilters(ProductFilterByUserDto filters) {
+
+        if (filters == null) {
+            return;
+        }
+
+        if (!filters.hasValidPriceRange()) {
+            throw new BadRequestException("El precio máximo debe ser mayor o igual al precio mínimo");
+        }
+
+        if (filters.getCategoryId() != null &&
+                !categoryRepository.existsByIdAndDeletedFalse(filters.getCategoryId())) {
+            throw new NotFoundException("Category not found");
+        }
+
+
+    }
+
+    /*
+    * Convierte un texto vacío en null.
+    *
+    * Esto permite que el repositorio ignore el filtro por nombre
+    * cuando el query param llega vacío.
+    */
+    private String normalizeName(String name) {
+
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+
+        return name.trim();
+    }
+
+    /*
+    * Retorna productos activos usando Page.
+    *
+    * Incluye metadatos completos:
+    * totalElements, totalPages, number, size, first, last.
+    */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDto> findAllPage(PaginationDto pagination) {
+
+        Pageable pageable = createPageable(pagination);
+
+        return productRepository.findActivePage(pageable)
+                .map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
+    }
+
+    /*
+    * Retorna productos activos usando Slice.
+    *
+    * No incluye totalElements ni totalPages.
+    * Es más liviano para navegación secuencial.
+    */
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ProductResponseDto> findAllSlice(PaginationDto pagination) {
+
+        Pageable pageable = createPageable(pagination);
+
+        return productRepository.findActiveSlice(pageable)
+            .map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
+    }
+
+    /*
+    * Construye el objeto Pageable validando:
+    * página, tamaño, campo de ordenamiento y dirección.
+    */
+    private Pageable createPageable(PaginationDto pagination) {
+
+        String sortBy = normalizeSortBy(pagination.getSortBy());
+
+        Sort.Direction direction = normalizeDirection(pagination.getDirection());
+
+        Sort sort = Sort.by(direction, sortBy);
+
+        return PageRequest.of(
+                pagination.getPage(),
+                pagination.getSize(),
+                sort
+        );
+    }
+
+    /*
+    * Valida que el campo de ordenamiento exista y esté permitido.
+    *
+    * Se usa lista blanca para evitar ordenar por campos inexistentes
+    * o por relaciones complejas no preparadas para esta práctica.
+    */
+    private String normalizeSortBy(String sortBy) {
+
+        if (sortBy == null || sortBy.isBlank()) {
+            return "id";
+        }
+
+        Set<String> allowedFields = Set.of(
+                "id",
+                "name",
+                "price",
+                "stock",
+                "createdAt",
+                "updatedAt"
+        );
+
+        if (!allowedFields.contains(sortBy)) {
+            throw new BadRequestException("Campo de ordenamiento no permitido: " + sortBy);
+        }
+
+        return sortBy;
+    }
+
+    /*
+    * Convierte la dirección recibida por query param
+    * en Sort.Direction.
+    */
+    private Sort.Direction normalizeDirection(String direction) {
+
+        if (direction == null || direction.isBlank()) {
+            return Sort.Direction.ASC;
+        }
+
+        if (direction.equalsIgnoreCase("asc")) {
+            return Sort.Direction.ASC;
+        }
+
+        if (direction.equalsIgnoreCase("desc")) {
+            return Sort.Direction.DESC;
+        }
+
+        throw new BadRequestException("Dirección de ordenamiento no válida: " + direction);
+    }
+
+    /*
+     * Retorna productos activos de una categoría usando Page.
+     * Mantiene los filtros de la práctica anterior y agrega paginación.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponseDto> findByCategoryIdWithFiltersPage(
+            Long categoryId,
+            ProductFilterByCategoryDto filters,
+            PaginationDto pagination
+    ) {
+        if (!categoryRepository.existsByIdAndDeletedFalse(categoryId)) {
+            throw new NotFoundException("Category not found");
+        }
+
+        validateCategoryFilters(filters);
+
+        String name = normalizeName(filters.getName());
+        Pageable pageable = createPageable(pagination);
+
+        BigDecimal minPrice = filters.getMinPrice() != null ? BigDecimal.valueOf(filters.getMinPrice()) : null;
+        BigDecimal maxPrice = filters.getMaxPrice() != null ? BigDecimal.valueOf(filters.getMaxPrice()) : null;
+
+        return productRepository.findByCategoryIdWithFiltersPage(
+                categoryId,
+                name,
+                minPrice,
+                maxPrice,
+                pageable
+        ).map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
+    }
+
+    /*
+     * Retorna productos activos de una categoría usando Slice.
+     * No calcula totalElements ni totalPages.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Slice<ProductResponseDto> findByCategoryIdWithFiltersSlice(
+            Long categoryId,
+            ProductFilterByCategoryDto filters,
+            PaginationDto pagination
+    ) {
+        if (!categoryRepository.existsByIdAndDeletedFalse(categoryId)) {
+            throw new NotFoundException("Category not found");
+        }
+
+        validateCategoryFilters(filters);
+
+        String name = normalizeName(filters.getName());
+        Pageable pageable = createPageable(pagination);
+
+        BigDecimal minPrice = filters.getMinPrice() != null ? BigDecimal.valueOf(filters.getMinPrice()) : null;
+        BigDecimal maxPrice = filters.getMaxPrice() != null ? BigDecimal.valueOf(filters.getMaxPrice()) : null;
+
+        return productRepository.findByCategoryIdWithFiltersSlice(
+                categoryId,
+                name,
+                minPrice,
+                maxPrice,
+                pageable
+        ).map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
+    }
 
 
 }

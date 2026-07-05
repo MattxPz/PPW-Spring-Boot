@@ -22,8 +22,6 @@ public class ProductFilterByCategoryDto {
 
     /*
      * Valida que el rango de precios sea coherente.
-     *
-     * Si ambos valores existen, maxPrice debe ser mayor o igual a minPrice.
      */
     public boolean hasValidPriceRange() {
         if (minPrice != null && maxPrice != null) {

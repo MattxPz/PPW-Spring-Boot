@@ -1,6 +1,9 @@
 package ec.edu.ups.icc.fundamentos01.products.dtos;
 
+import java.util.Set;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -19,17 +22,17 @@ public class UpdateProductDto {
     @PositiveOrZero(message = "El precio debe ser un número positivo o cero")
     private Double price;
 
-    @NotNull(message = "El ID de la categoría es obligatorio")
-    private Long categoryId;
+    @NotEmpty(message = "Debe seleccionar al menos una categoría")
+    private Set<Long> categoryIds;
 
     public UpdateProductDto() {
     }
 
-    public UpdateProductDto(String name, Integer stock, Double price, Long categoryId) {
+    public UpdateProductDto(String name, Integer stock, Double price, Set<Long> categoryIds) {
         this.name = name;
         this.stock = stock;
         this.price = price;
-        this.categoryId = categoryId;
+        this.categoryIds = categoryIds;
     }
 
     public String getName() {
@@ -56,11 +59,11 @@ public class UpdateProductDto {
         this.price = price;
     }
 
-    public Long getCategoryId() {
-        return categoryId;
+    public Set<Long> getCategoryIds() {
+        return categoryIds;
     }
 
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
+    public void setCategoryIds(Set<Long> categoryIds) {
+        this.categoryIds = categoryIds;
     }
 }

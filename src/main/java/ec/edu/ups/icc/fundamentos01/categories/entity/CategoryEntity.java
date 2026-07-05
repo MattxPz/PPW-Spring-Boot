@@ -1,10 +1,16 @@
 package ec.edu.ups.icc.fundamentos01.categories.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.hibernate.annotations.Audited.Table;
 
 import ec.edu.ups.icc.fundamentos01.core.entities.BaseEntity;
+import ec.edu.ups.icc.fundamentos01.products.entities.ProductEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
 
 /*
  * Entidad JPA del recurso categories.
@@ -23,14 +29,24 @@ public class CategoryEntity extends BaseEntity {
     @Column(length = 500)
     private String description;
 
+    /*
+    * Relación inversa con productos.
+    *
+    * mappedBy indica que la relación principal se define
+    * en el atributo categories de ProductEntity.
+    */
+    @ManyToMany(mappedBy = "categories", fetch = FetchType.LAZY)
+    private Set<ProductEntity> products = new HashSet<>();
+
     // Constructor vacío
     public CategoryEntity() {
     }
 
     // Constructor lleno
-    public CategoryEntity(String name, String description) {
+    public CategoryEntity(String name, String description, Set<ProductEntity> products) {
         this.name = name;
         this.description = description;
+        this.products = products;
     }
 
     // Getters y setters
@@ -48,5 +64,13 @@ public class CategoryEntity extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public Set<ProductEntity> getProducts() {
+        return products;
+    }
+
+    public void setProducts(Set<ProductEntity> products) {
+        this.products = products;
     }
 }

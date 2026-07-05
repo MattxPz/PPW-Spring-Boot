@@ -1,6 +1,7 @@
 package ec.edu.ups.icc.fundamentos01.products.mappers;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 import ec.edu.ups.icc.fundamentos01.categories.mappers.CategoryMapper;
 import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
@@ -35,8 +36,8 @@ public class ProductMapper {
             model.setOwner(UserMapper.toModelFromEntity(entity.getOwner()));
         }
 
-        if (entity.getCategory() != null) {
-            model.setCategory(CategoryMapper.toModelFromEntity(entity.getCategory()));
+        if (entity.getCategories() != null) {
+            model.setCategories(entity.getCategories().stream().map(CategoryMapper::toModelFromEntity).collect(Collectors.toList()));
         }
 
         return model;
@@ -63,8 +64,8 @@ public class ProductMapper {
             response.setOwner(UserMapper.toResponse(model.getOwner()));
         }
 
-        if (model.getCategory() != null) {
-            response.setCategory(CategoryMapper.toResponse(model.getCategory()));
+        if (model.getCategories() != null) {
+            response.setCategories(model.getCategories().stream().map(CategoryMapper::toResponse).collect(Collectors.toList()));
         }
 
         response.setCreatedAt(model.getCreatedAt());
