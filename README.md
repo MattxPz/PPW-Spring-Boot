@@ -245,7 +245,6 @@ Se eliminó la relación directa que usaba una única clave foránea en la entid
 
 ---
 
-
 ### Practica 10
 
 - Capturas
@@ -272,5 +271,23 @@ Page representa una respuesta paginada completa e incluye metadatos como el tota
 
 **2) ¿Por qué la paginación debe aplicarse en el repositorio y no después de traer todos los datos en memoria?**
 Si la paginación se realiza en memoria, el sistema intentará consultar y cargar todos los registros existentes desde la base de datos al backend simultáneamente. Esto genera un consumo excesivo de recursos, sobrecarga de red, lentitud y posibles caídas por falta de memoria. Al aplicar la paginación a nivel de repositorio usando Pageable, el motor de base de datos se encarga de filtrar la cantidad exacta de registros requeridos mediante comandos SQL, enviando al servidor únicamente la pequeña fracción de datos solicitada, lo que garantiza el rendimiento y la escalabilidad de la API.
+
+---
+
+### Practica 11
+
+- Capturas
+
+**1. Captura de registro exitoso**
+![Register Successful](docs/images/11.1.png)
+
+**2. Captura de login exitoso**
+![Login Successful](docs/images/11.2.png)
+
+**3. Captura de endpoint protegido sin token**
+![Endpoint protected w no Token](docs/images/11.3.png)
+
+**4. Captura de endpoint protegido con token**
+![Endpoint protected w Token](docs/images/11.4.png)
 
 ---
