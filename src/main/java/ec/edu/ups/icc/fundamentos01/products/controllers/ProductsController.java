@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import ec.edu.ups.icc.fundamentos01.core.dtos.PaginationDto;
@@ -29,14 +30,18 @@ public class ProductsController {
     * para la gestión de productos.
     */
    
-    /*
-     * Endpoint normal.
+/*
+     * Endpoint administrativo.
      *
      * GET /api/products
      *
-     * Se mantiene sin paginación para comparar con los endpoints paginados.
+     * Devuelve todos los productos activos sin paginación.
+     * Por esa razón, solo debe ser consumido por usuarios ADMIN.
+     *
+     * hasRole('ADMIN') busca internamente ROLE_ADMIN.
      */
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<ProductResponseDto> findAll() {
         return service.findAll();
     }

@@ -267,9 +267,11 @@ Se eliminó la relación directa que usaba una única clave foránea en la entid
 - Explicación breve
 
 **1) ¿Cuál es la diferencia entre Page y Slice?**
+
 Page representa una respuesta paginada completa e incluye metadatos como el total de elementos y el total de páginas. Para lograr esto, ejecuta dos consultas en la base de datos: una para obtener los datos con `LIMIT` y `OFFSET`, y otra de tipo `COUNT` para saber el tamaño total de la tabla. Por otro lado, Slice es una versión más ligera que no incluye el total de elementos ni páginas, ya que omite la consulta `COUNT`. Simplemente solicita un registro adicional a la base de datos para determinar si existe una página siguiente, siendo ideal y más eficiente para funcionalidades como navegación secuencial o scroll infinito.
 
 **2) ¿Por qué la paginación debe aplicarse en el repositorio y no después de traer todos los datos en memoria?**
+
 Si la paginación se realiza en memoria, el sistema intentará consultar y cargar todos los registros existentes desde la base de datos al backend simultáneamente. Esto genera un consumo excesivo de recursos, sobrecarga de red, lentitud y posibles caídas por falta de memoria. Al aplicar la paginación a nivel de repositorio usando Pageable, el motor de base de datos se encarga de filtrar la cantidad exacta de registros requeridos mediante comandos SQL, enviando al servidor únicamente la pequeña fracción de datos solicitada, lo que garantiza el rendimiento y la escalabilidad de la API.
 
 ---
@@ -289,5 +291,31 @@ Si la paginación se realiza en memoria, el sistema intentará consultar y carga
 
 **4. Captura de endpoint protegido con token**
 ![Endpoint protected w Token](docs/images/11.4.png)
+
+---
+
+### Practica 12
+
+- Capturas
+
+**1. Captura de usuario autenticado**
+![User authenticated](docs/images/12.1.png)
+
+**2. Captura de acceso denegado por rol**
+![Access denied by role](docs/images/12.2.png)
+
+**3. Captura de acceso permitido por rol ADMIN**
+![Access granted for ADMIN role](docs/images/12.3.png)
+
+- Explicación breve
+
+**1) ¿Cuál es la diferencia entre autenticación y autorización?**
+
+Autenticación: verifica quién eres. Consiste en confirmar la identidad de un usuario, por ejemplo, mediante un nombre de usuario y contraseña, huella dactilar o reconocimiento facial.
+Autorización: determina qué puedes hacer una vez que ya has sido autenticado. Define los permisos o recursos a los que tienes acceso según tu rol o privilegios.
+
+**2) ¿Por qué GET /api/products debe ser solo para ADMIN, mientras GET /api/products/page puede ser consumido por cualquier usuario autenticado?**
+
+`GET /api/products` es exclusivo para `ADMIN` porque está orientado a la administración del catálogo de productos. En cambio, `GET /api/products/page` puede ser usado por cualquier usuario autenticado, ya que solo permite consultar los productos de forma paginada.
 
 ---

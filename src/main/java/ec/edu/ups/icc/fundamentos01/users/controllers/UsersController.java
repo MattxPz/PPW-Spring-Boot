@@ -1,12 +1,19 @@
 package ec.edu.ups.icc.fundamentos01.users.controllers;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductFilterByUserDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
 import ec.edu.ups.icc.fundamentos01.products.services.ProductService;
+import ec.edu.ups.icc.fundamentos01.security.dtos.CurrentUserResponseDto;
+import ec.edu.ups.icc.fundamentos01.security.services.UserDetailsImpl;
 import ec.edu.ups.icc.fundamentos01.users.dtos.CreateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.PartialUpdateUserDto;
 import ec.edu.ups.icc.fundamentos01.users.dtos.UpdateUserDto;
@@ -28,6 +35,7 @@ public class UsersController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')") // Solo usuarios con rol ADMIN pueden acceder
     public List<UserResponseDto> findAll() {
         return service.findAll();
     }
@@ -69,5 +77,28 @@ public class UsersController {
             @Valid @ModelAttribute ProductFilterByUserDto filters
     ) {
         return productService.findByUserIdWithFilters(id, filters);
+    }
+
+    /*
+     * Retorna los datos del usuario autenticado.
+     *
+     * @AuthenticationPrincipal obtiene el usuario que fue colocado
+     * en el SecurityContext por JwtAuthenticationFilter.
+     */
+    @GetMapping("/me")
+    public CurrentUserResponseDto me(
+            @AuthenticationPrincipal UserDetailsImpl currentUser
+    ) {
+        Set<String> roles = currentUser.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+        return new CurrentUserResponseDto(
+                currentUser.getId(),
+                currentUser.getName(),
+                currentUser.getEmail(),
+                roles
+        );
     }
 }

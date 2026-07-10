@@ -85,10 +85,15 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/status/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
+
+                // Endpoints por rol
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/moderator/**").hasAnyRole("ADMIN", "MODERATOR")
                 
                 // Todos los demás endpoints requieren autenticación
                 .anyRequest().authenticated()
-            );
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         // Agregar proveedor de autenticación
         http.authenticationProvider(authenticationProvider());
