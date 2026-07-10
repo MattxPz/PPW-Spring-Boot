@@ -72,4 +72,16 @@ public class ProductMapper {
         response.setUpdatedAt(model.getUpdatedAt());
         return response;
     }
+
+    /*
+     * Método de conveniencia: convierte directamente de ProductEntity
+     * a ProductResponseDto, sin exponer el paso intermedio por ProductModel.
+     *
+     * Internamente reutiliza toModelFromEntity + toResponse,
+     * así que no duplica lógica de mapeo, solo evita repetir
+     * las dos líneas en cada método del service.
+     */
+    public static ProductResponseDto toResponseFromEntity(ProductEntity entity) {
+        return toResponse(toModelFromEntity(entity));
+    }
 }

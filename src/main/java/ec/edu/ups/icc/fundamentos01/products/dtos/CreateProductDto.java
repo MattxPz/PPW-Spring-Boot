@@ -22,8 +22,8 @@ public class CreateProductDto {
     @PositiveOrZero(message = "El precio debe ser un número positivo o cero")
     private Double price;
 
-    @NotNull(message = "El ID del usuario es obligatorio")
-    private Long userId;
+    // @NotNull(message = "El ID del usuario es obligatorio")
+    // private Long userId;
 
     @NotEmpty(message = "Debe seleccionar al menos una categoría")
     private Set<Long> categoryIds;
@@ -33,11 +33,11 @@ public class CreateProductDto {
 
     
 
-    public CreateProductDto(String name, Integer stock, Double price, Long userId, Set<Long> categoryIds) {
+    public CreateProductDto(String name, Integer stock, Double price, Set<Long> categoryIds) {
         this.name = name;
         this.stock = stock;
         this.price = price;
-        this.userId = userId;
+        //this.userId = userId;
         this.categoryIds = categoryIds;
     }
 
@@ -65,13 +65,13 @@ public class CreateProductDto {
         this.price = price;
     }
 
-    public Long getUserId() {
-        return userId;
-    }
+    // public Long getUserId() {
+    //     return userId;
+    // }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
+    // public void setUserId(Long userId) {
+    //     this.userId = userId;
+    // }
 
     public Set<Long> getCategoryIds() {
         return categoryIds;

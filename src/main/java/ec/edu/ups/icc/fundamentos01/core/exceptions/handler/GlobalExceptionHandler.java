@@ -114,27 +114,34 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    /**
-     * Maneja errores de acceso denegado.
-     *
-     * También se usará cuando se valide
-     * ownership desde los servicios.
-     */
+    /*
+    * Maneja errores de acceso denegado.
+    *
+    * Se usa cuando:
+    * - Un usuario autenticado no tiene permiso.
+    * - Un usuario intenta modificar un producto ajeno.
+    */
+        
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
-            AccessDeniedException ex,
-            HttpServletRequest request
+        AccessDeniedException ex,
+        HttpServletRequest request
     ) {
+        String message = ex.getMessage();
+        if (message == null || message.isBlank()) {
+                message = "Acceso denegado";
+        }
+
         ErrorResponse response = new ErrorResponse(
                 HttpStatus.FORBIDDEN,
-                "Acceso denegado",
+                message,
                 request.getRequestURI()
         );
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(response);
-    }
+        }
 
     /**
      * Maneja errores de autenticación producidos dentro del flujo

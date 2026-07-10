@@ -4,14 +4,17 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.GrantedAuthority;
 
 import ec.edu.ups.icc.fundamentos01.categories.entity.CategoryEntity;
 import ec.edu.ups.icc.fundamentos01.categories.repositories.CategoryRepository;
@@ -29,6 +32,7 @@ import ec.edu.ups.icc.fundamentos01.products.entities.ProductEntity;
 import ec.edu.ups.icc.fundamentos01.products.mappers.ProductMapper;
 import ec.edu.ups.icc.fundamentos01.products.models.ProductModel;
 import ec.edu.ups.icc.fundamentos01.products.repositories.ProductRepository;
+import ec.edu.ups.icc.fundamentos01.security.services.UserDetailsImpl;
 import ec.edu.ups.icc.fundamentos01.users.entities.UserEntity;
 import ec.edu.ups.icc.fundamentos01.users.repositories.UserRepository;
 
@@ -36,12 +40,8 @@ import ec.edu.ups.icc.fundamentos01.users.repositories.UserRepository;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-
     private final UserRepository userRepository;
-
     private final CategoryRepository categoryRepository;
-
-
 
     public ProductServiceImpl(
             ProductRepository productRepository,
@@ -53,31 +53,21 @@ public class ProductServiceImpl implements ProductService {
         this.categoryRepository = categoryRepository;
     }
 
-    /*
-    * Retorna los productos activos creados por un usuario.
-    *
-    * Primero valida que el usuario exista y no esté eliminado.
-    */
     @Override
     public List<ProductResponseDto> findByUserId(Long userId) {
-            if (!userRepository.existsByIdAndDeletedFalse(userId)) {
-                throw new NotFoundException("User not found");
-            }
+        if (!userRepository.existsByIdAndDeletedFalse(userId)) {
+            throw new NotFoundException("User not found");
+        }
 
-                List<ProductEntity> list = productRepository.findByOwner_IdAndDeletedFalse(userId);
+        List<ProductEntity> list = productRepository.findByOwner_IdAndDeletedFalse(userId);
 
-            return list
-                    .stream()
-                    .map(ProductMapper::toModelFromEntity)
-                    .map(ProductMapper::toResponse)
-                    .toList();
+        return list
+                .stream()
+                .map(ProductMapper::toModelFromEntity)
+                .map(ProductMapper::toResponse)
+                .toList();
     }
 
-        /*
-    * Retorna los productos activos asociados a una categoría.
-    *
-    * Primero valida que la categoría exista y no esté eliminada.
-    */
     @Override
     public List<ProductResponseDto> findByCategoryId(Long categoryId) {
 
@@ -92,12 +82,11 @@ public class ProductServiceImpl implements ProductService {
                 .toList();
     }
 
-
     @Override
     public List<ProductResponseDto> findAll() {
         return productRepository.findAll()
                 .stream()
-                .filter(entity -> !entity.isDeleted()) 
+                .filter(entity -> !entity.isDeleted())
                 .map(ProductMapper::toModelFromEntity)
                 .map(ProductMapper::toResponse)
                 .toList();
@@ -115,34 +104,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /*
-    * Crea un producto asociado a un usuario y a una categoría.
-    *
-    * Valida:
-    * - que el usuario exista
-    * - que la categoría exista
-    * - que no exista un producto activo con el mismo nombre
-    */
+     * Crea un producto usando como owner al usuario autenticado.
+     */
     @Override
-    public ProductResponseDto create(CreateProductDto dto) {
+    @Transactional
+    public ProductResponseDto create(
+            CreateProductDto dto,
+            UserDetailsImpl currentUser
+    ) {
 
-            // 1 Encontramos el user
-        UserEntity owner = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+        UserEntity owner = findCurrentUserEntity(currentUser);
 
-        if (owner.isDeleted()) {
-            throw new NotFoundException("User not found");
-        }
+        Set<CategoryEntity> categories = findActiveCategories(dto.getCategoryIds());
 
-            // 2 Encontramos las categorias
-        Set<CategoryEntity> categories = validateAndGetCategories(dto.getCategoryIds());
-
-    // validadacion de negocio, por ejemplo que no exista un producto  con el mismo nombre
-        if (productRepository.findByNameIgnoreCaseAndDeletedFalse(dto.getName()).isPresent()) {
-            throw new ConflictException("Product name already registered");
-        }
-
-
-            // Genereamos la entidad a partir del DTO
+        validateProductNameForCreate(dto.getName());
 
         ProductEntity entity = new ProductEntity();
 
@@ -152,51 +127,59 @@ public class ProductServiceImpl implements ProductService {
         entity.setOwner(owner);
         entity.setCategories(categories);
 
-    ProductEntity savedEntity = productRepository.save(entity);
+        ProductEntity savedEntity = productRepository.save(entity);
 
-            ProductModel savedModel = ProductMapper.toModelFromEntity(savedEntity);
+        ProductModel savedModel = ProductMapper.toModelFromEntity(savedEntity);
 
-            return ProductMapper.toResponse(savedModel);
+        return ProductMapper.toResponse(savedModel);
     }
 
     /*
-    * Actualiza completamente un producto activo.
-    *
-    * No permite cambiar el usuario propietario.
-    * Sí permite cambiar la categoría.
-    */
+     * Actualiza completamente un producto.
+     */
     @Override
-    public ProductResponseDto update(Long id, UpdateProductDto dto) {
+    @Transactional
+    public ProductResponseDto update(
+            Long id,
+            UpdateProductDto dto,
+            UserDetailsImpl currentUser
+    ) {
+        ProductEntity entity = findActiveProductOrThrow(id);
 
-        ProductEntity entity = productRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
+        validateOwnership(entity, currentUser);
 
-        Set<CategoryEntity> categories = validateAndGetCategories(dto.getCategoryIds());
+        validateProductNameForUpdate(entity.getId(), dto.getName());
+
+        Set<CategoryEntity> categories = findActiveCategories(dto.getCategoryIds());
 
         entity.setName(dto.getName());
         entity.setPrice(dto.getPrice());
         entity.setStock(dto.getStock());
         entity.setCategories(categories);
 
-            ProductEntity savedEntity = productRepository.save(entity);
+        ProductEntity savedEntity = productRepository.save(entity);
 
-            ProductModel model = ProductMapper.toModelFromEntity(savedEntity);
+        ProductModel model = ProductMapper.toModelFromEntity(savedEntity);
 
-            return ProductMapper.toResponse(model);
+        return ProductMapper.toResponse(model);
     }
 
     /*
-    * Actualiza parcialmente un producto activo.
-    *
-    * Solo modifica los campos enviados en el DTO.
-    */
+     * Actualiza parcialmente un producto.
+     */
     @Override
-    public ProductResponseDto partialUpdate(Long id, PartialUpdateProductDto dto) {
+    @Transactional
+    public ProductResponseDto partialUpdate(
+            Long id,
+            PartialUpdateProductDto dto,
+            UserDetailsImpl currentUser
+    ) {
+        ProductEntity entity = findActiveProductOrThrow(id);
 
-        ProductEntity entity = productRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
+        validateOwnership(entity, currentUser);
 
         if (dto.getName() != null) {
+            validateProductNameForUpdate(entity.getId(), dto.getName());
             entity.setName(dto.getName());
         }
 
@@ -209,32 +192,146 @@ public class ProductServiceImpl implements ProductService {
         }
 
         if (dto.getCategoryIds() != null) {
-            entity.setCategories(validateAndGetCategories(dto.getCategoryIds()));
+            entity.setCategories(findActiveCategories(dto.getCategoryIds()));
         }
 
         ProductEntity savedEntity = productRepository.save(entity);
 
-            ProductModel model = ProductMapper.toModelFromEntity(savedEntity);
+        ProductModel model = ProductMapper.toModelFromEntity(savedEntity);
 
-            return ProductMapper.toResponse(model);
+        return ProductMapper.toResponse(model);
     }
 
+    /*
+     * Elimina lógicamente un producto.
+     */
     @Override
-    public void delete(Long id) {
-        ProductEntity entity = productRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new NotFoundException("Product not found"));
-                
+    @Transactional
+    public void delete(
+            Long id,
+            UserDetailsImpl currentUser
+    ) {
+        ProductEntity entity = findActiveProductOrThrow(id);
+
+        validateOwnership(entity, currentUser);
+
         entity.setDeleted(true);
         productRepository.save(entity);
     }
 
     /*
-    * Retorna productos activos de un usuario aplicando filtros opcionales.
-    *
-    * Primero valida que el usuario exista y no esté eliminado.
-    * Luego valida el rango de precios.
-    * Finalmente consulta los productos desde ProductRepository.
-    */
+     * Busca un producto activo.
+     * Si no existe o está eliminado, devuelve 404.
+     */
+    private ProductEntity findActiveProductOrThrow(Long id) {
+        return productRepository.findById(id)
+                .filter(product -> !product.isDeleted())
+                .orElseThrow(() -> new NotFoundException("Product not found"));
+    }
+
+    /*
+     * Obtiene el usuario autenticado como entidad JPA.
+     */
+    private UserEntity findCurrentUserEntity(UserDetailsImpl currentUser) {
+
+        if (currentUser == null) {
+            throw new AccessDeniedException("Usuario no autenticado");
+        }
+
+        return userRepository.findByIdAndDeletedFalse(currentUser.getId())
+                .orElseThrow(() -> new AccessDeniedException("Usuario no autorizado"));
+    }
+
+    /*
+     * Valida si el usuario autenticado puede modificar o eliminar el producto.
+     *
+     * Reglas:
+     * 1. ROLE_ADMIN puede modificar cualquier producto.
+     * 2. ROLE_USER solo puede modificar productos propios.
+     */
+    private void validateOwnership(
+            ProductEntity product,
+            UserDetailsImpl currentUser
+    ) {
+        if (currentUser == null) {
+            throw new AccessDeniedException("Usuario no autenticado");
+        }
+
+        if (hasRole(currentUser, "ROLE_ADMIN")) {
+            return;
+        }
+
+        if (product.getOwner() == null || product.getOwner().getId() == null) {
+            throw new AccessDeniedException("El producto no tiene propietario válido");
+        }
+
+        if (!product.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("No puedes modificar productos ajenos");
+        }
+    }
+
+    /*
+     * Verifica si el usuario tiene un rol específico.
+     */
+    private boolean hasRole(
+            UserDetailsImpl user,
+            String role
+    ) {
+        return user.getAuthorities()
+                .stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals(role));
+    }
+
+    /*
+     * Valida que el nombre no esté registrado al crear.
+     */
+    private void validateProductNameForCreate(String name) {
+
+        if (productRepository.findByNameIgnoreCaseAndDeletedFalse(name.trim()).isPresent()) {
+            throw new ConflictException("Product name already registered");
+        }
+    }
+
+    /*
+     * Valida que el nombre no esté registrado en otro producto al actualizar.
+     * Se permite que el producto conserve su mismo nombre.
+     */
+    private void validateProductNameForUpdate(
+            Long currentProductId,
+            String name
+    ) {
+        productRepository.findByNameIgnoreCaseAndDeletedFalse(name.trim())
+                .filter(product -> !product.getId().equals(currentProductId))
+                .ifPresent(product -> {
+                    throw new ConflictException("Product name already registered");
+                });
+    }
+
+    /*
+     * Busca categorías activas por ids.
+     * Si una categoría no existe o está eliminada, se rechaza la operación.
+     */
+    private Set<CategoryEntity> findActiveCategories(Set<Long> categoryIds) {
+
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            throw new BadRequestException("Debe seleccionar al menos una categoría");
+        }
+
+        Set<Long> uniqueIds = new HashSet<>(categoryIds);
+
+        Set<CategoryEntity> categories = categoryRepository.findAllById(uniqueIds)
+                .stream()
+                .filter(category -> !category.isDeleted())
+                .collect(Collectors.toSet());
+
+        if (categories.size() != uniqueIds.size()) {
+            throw new NotFoundException("One or more categories were not found");
+        }
+
+        return categories;
+    }
+
     @Override
     public List<ProductResponseDto> findByUserIdWithFilters(
             Long userId,
@@ -256,20 +353,11 @@ public class ProductServiceImpl implements ProductService {
                         filters.getCategoryId()
                 )
                 .stream()
-            .map(ProductMapper::toModelFromEntity)
-                    .map(ProductMapper::toResponse)
+                .map(ProductMapper::toModelFromEntity)
+                .map(ProductMapper::toResponse)
                 .toList();
     }
 
-
-    /*
-    * Retorna productos activos de una categoría aplicando filtros opcionales.
-    *
-    * Primero valida que la categoría exista y no esté eliminada.
-    * Luego valida el rango de precios.
-    * Si viene userId como filtro, valida que el usuario exista.
-    * Finalmente consulta los productos desde ProductRepository.
-    */
     @Override
     public List<ProductResponseDto> findByCategoryIdWithFilters(
             Long categoryId,
@@ -311,39 +399,6 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-
-    /*
-    * Valida que todas las categorías existan y estén activas.
-    *
-    * Retorna el conjunto de entidades CategoryEntity
-    * que se asociarán al producto.
-    */
-    private Set<CategoryEntity> validateAndGetCategories(Set<Long> categoryIds) {
-
-        if (categoryIds == null || categoryIds.isEmpty()) {
-            throw new BadRequestException("Debe seleccionar al menos una categoría");
-        }
-
-        Set<CategoryEntity> categories = new HashSet<>();
-
-        for (Long categoryId : categoryIds) {
-            CategoryEntity category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new NotFoundException("Category not found"));
-
-            if (category.isDeleted()) {
-                throw new NotFoundException("Category not found");
-            }
-
-            categories.add(category);
-        }
-
-        return categories;
-    }
-
-
-    /*
-    * Valida reglas de negocio relacionadas con filtros.
-    */
     private void validateUserFilters(ProductFilterByUserDto filters) {
 
         if (filters == null) {
@@ -358,16 +413,8 @@ public class ProductServiceImpl implements ProductService {
                 !categoryRepository.existsByIdAndDeletedFalse(filters.getCategoryId())) {
             throw new NotFoundException("Category not found");
         }
-
-
     }
 
-    /*
-    * Convierte un texto vacío en null.
-    *
-    * Esto permite que el repositorio ignore el filtro por nombre
-    * cuando el query param llega vacío.
-    */
     private String normalizeName(String name) {
 
         if (name == null || name.isBlank()) {
@@ -377,12 +424,6 @@ public class ProductServiceImpl implements ProductService {
         return name.trim();
     }
 
-    /*
-    * Retorna productos activos usando Page.
-    *
-    * Incluye metadatos completos:
-    * totalElements, totalPages, number, size, first, last.
-    */
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponseDto> findAllPage(PaginationDto pagination) {
@@ -394,25 +435,25 @@ public class ProductServiceImpl implements ProductService {
     }
 
     /*
-    * Retorna productos activos usando Slice.
+    * Retorna productos activos del usuario autenticado usando Slice.
     *
     * No incluye totalElements ni totalPages.
     * Es más liviano para navegación secuencial.
     */
     @Override
     @Transactional(readOnly = true)
-    public Slice<ProductResponseDto> findAllSlice(PaginationDto pagination) {
+    public Slice<ProductResponseDto> findAllSlice(
+            PaginationDto pagination,
+            UserDetailsImpl currentUser
+    ) {
+        UserEntity owner = findCurrentUserEntity(currentUser);
 
         Pageable pageable = createPageable(pagination);
 
-        return productRepository.findActiveSlice(pageable)
-            .map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
+        return productRepository.findActiveSliceByOwnerId(owner.getId(), pageable)
+                .map(ProductMapper::toResponseFromEntity);
     }
 
-    /*
-    * Construye el objeto Pageable validando:
-    * página, tamaño, campo de ordenamiento y dirección.
-    */
     private Pageable createPageable(PaginationDto pagination) {
 
         String sortBy = normalizeSortBy(pagination.getSortBy());
@@ -428,12 +469,6 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
-    /*
-    * Valida que el campo de ordenamiento exista y esté permitido.
-    *
-    * Se usa lista blanca para evitar ordenar por campos inexistentes
-    * o por relaciones complejas no preparadas para esta práctica.
-    */
     private String normalizeSortBy(String sortBy) {
 
         if (sortBy == null || sortBy.isBlank()) {
@@ -456,10 +491,6 @@ public class ProductServiceImpl implements ProductService {
         return sortBy;
     }
 
-    /*
-    * Convierte la dirección recibida por query param
-    * en Sort.Direction.
-    */
     private Sort.Direction normalizeDirection(String direction) {
 
         if (direction == null || direction.isBlank()) {
@@ -477,10 +508,6 @@ public class ProductServiceImpl implements ProductService {
         throw new BadRequestException("Dirección de ordenamiento no válida: " + direction);
     }
 
-    /*
-     * Retorna productos activos de una categoría usando Page.
-     * Mantiene los filtros de la práctica anterior y agrega paginación.
-     */
     @Override
     @Transactional(readOnly = true)
     public Page<ProductResponseDto> findByCategoryIdWithFiltersPage(
@@ -509,10 +536,6 @@ public class ProductServiceImpl implements ProductService {
         ).map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
     }
 
-    /*
-     * Retorna productos activos de una categoría usando Slice.
-     * No calcula totalElements ni totalPages.
-     */
     @Override
     @Transactional(readOnly = true)
     public Slice<ProductResponseDto> findByCategoryIdWithFiltersSlice(
@@ -540,6 +563,4 @@ public class ProductServiceImpl implements ProductService {
                 pageable
         ).map(ProductMapper::toModelFromEntity).map(ProductMapper::toResponse);
     }
-
-
 }

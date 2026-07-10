@@ -319,3 +319,37 @@ Autorización: determina qué puedes hacer una vez que ya has sido autenticado. 
 `GET /api/products` es exclusivo para `ADMIN` porque está orientado a la administración del catálogo de productos. En cambio, `GET /api/products/page` puede ser usado por cualquier usuario autenticado, ya que solo permite consultar los productos de forma paginada.
 
 ---
+
+### Practica 13
+
+- Capturas
+
+**1. Captura de creación de producto con usuario autenticado**
+![POST products with authenticated user](docs/images/13.1.png)
+
+**2. Captura de bloqueo por producto ajeno**
+![Unaffiliated product block](docs/images/13.2.png)
+
+**3. Captura de eliminación de producto ajeno bloqueada*
+![Deletion of unaffiliated product blocked](docs/images/13.3.png)
+
+**4. Captura de ADMIN modificando producto ajeno**
+![ADMIN modifying another user's product](docs/images/13.4.png)
+
+- Explicación breve
+
+**1) ¿Qué es ownership?**
+
+En Spring Boot y desarrollo web, ownership es la responsabilidad o propiedad de una parte del código o recurso. Significa que una persona, equipo o componente es el encargado de mantener, modificar y garantizar el correcto funcionamiento de ese elemento, como un controlador, servicio, entidad o API.
+
+
+**2) ¿Por qué no es seguro recibir userId en CreateProductDto?**
+
+No es seguro recibir `userId` en `CreateProductDto` porque un usuario podría modificar ese valor y crear un producto a nombre de otra persona. Lo correcto es obtener el ID del usuario autenticado desde el contexto de seguridad, en lugar de confiar en un dato enviado por el cliente.
+
+
+**3) ¿Cuál es la diferencia entre autorización por rol y autorización por ownership?**
+
+La autorización por rol permite o deniega acciones según el rol del usuario. En cambio, la autorización por ownership verifica si el usuario es el propietario del recurso sobre el que intenta realizar una acción, aunque tenga el rol requerido.
+
+---

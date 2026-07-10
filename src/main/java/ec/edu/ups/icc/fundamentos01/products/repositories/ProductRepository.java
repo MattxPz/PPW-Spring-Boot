@@ -35,7 +35,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
 
     List<ProductEntity> findByCategories_NameIgnoreCaseAndDeletedFalse(String categoryName);
 
-    
+
     /*
      * Busca productos activos de un usuario aplicando filtros opcionales.
      *
@@ -119,6 +119,24 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Long> {
             WHERE p.deleted = false
             """)
     Slice<ProductEntity> findActiveSlice(Pageable pageable);
+
+    /*
+     * Consulta productos activos del usuario autenticado usando Slice.
+     *
+     * Igual que findActiveSlice, pero filtrando por owner.id.
+     * Se usa en GET /products/slice para que cada usuario
+     * solo vea sus propios productos.
+     */
+    @Query("""
+            SELECT p
+            FROM ProductEntity p
+            WHERE p.deleted = false
+              AND p.owner.id = :ownerId
+            """)
+    Slice<ProductEntity> findActiveSliceByOwnerId(
+            @Param("ownerId") Long ownerId,
+            Pageable pageable
+    );
 
     /*
      * Consulta productos activos de una categoría específica usando Page.

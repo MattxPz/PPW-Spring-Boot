@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Slice;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +14,10 @@ import ec.edu.ups.icc.fundamentos01.products.dtos.PartialUpdateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.UpdateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
 import ec.edu.ups.icc.fundamentos01.products.services.ProductService;
+import ec.edu.ups.icc.fundamentos01.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/products")
@@ -26,11 +30,11 @@ public class ProductsController {
     }
 
     /*
-    * Controlador REST encargado de exponer endpoints HTTP
-    * para la gestión de productos.
-    */
-   
-/*
+     * Controlador REST encargado de exponer endpoints HTTP
+     * para la gestión de productos.
+     */
+
+    /*
      * Endpoint administrativo.
      *
      * GET /api/products
@@ -48,10 +52,6 @@ public class ProductsController {
 
     /*
      * Endpoint paginado usando Page.
-     *
-     * GET /api/products/page
-     * GET /api/products/page?page=0&size=5
-     * GET /api/products/page?page=0&size=5&sortBy=price&direction=desc
      */
     @GetMapping("/page")
     public Page<ProductResponseDto> findAllPage(
@@ -61,50 +61,86 @@ public class ProductsController {
     }
 
     /*
-     * Endpoint paginado usando Slice.
-     *
-     * GET /api/products/slice
-     * GET /api/products/slice?page=0&size=5
-     * GET /api/products/slice?page=0&size=5&sortBy=createdAt&direction=desc
-     */
+    * Endpoint paginado usando Slice.
+    *
+    * Solo devuelve los productos del usuario autenticado.
+    */
     @GetMapping("/slice")
     public Slice<ProductResponseDto> findAllSlice(
-            @Valid @ModelAttribute PaginationDto pagination
+            @Valid @ModelAttribute PaginationDto pagination,
+            @AuthenticationPrincipal UserDetailsImpl currentUser
     ) {
-        return service.findAllSlice(pagination);
+        return service.findAllSlice(pagination, currentUser);
     }
-
-    /*
-     * Los demás endpoints CRUD se mantienen igual.
-     */
-    
 
     @GetMapping("/{id}")
     public ProductResponseDto findOne(@Valid @PathVariable Long id) {
         return service.findOne(id);
     }
 
+    /*
+     * Crear producto.
+     *
+     * POST /api/products
+     *
+     * El owner ya no se toma desde el body.
+     * El owner se obtiene desde el token JWT mediante @AuthenticationPrincipal.
+     */
     @PostMapping
-    public ProductResponseDto create(@Valid @RequestBody CreateProductDto dto) {
-        return service.create(dto);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProductResponseDto create(
+            @Valid @RequestBody CreateProductDto dto,
+            @AuthenticationPrincipal UserDetailsImpl currentUser
+    ) {
+        return service.create(dto, currentUser);
     }
 
+    /*
+     * Actualizar producto (reemplazo completo).
+     *
+     * PUT /api/products/{id}
+     *
+     * El usuario autenticado se pasa al service para que este
+     * valide que el producto le pertenece (o que sea ADMIN)
+     * antes de actualizar.
+     */
     @PutMapping("/{id}")
-    public ProductResponseDto update(@PathVariable Long id, @Valid @RequestBody UpdateProductDto dto) {
-        return service.update(id, dto);
+    public ProductResponseDto update(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProductDto dto,
+            @AuthenticationPrincipal UserDetailsImpl currentUser
+    ) {
+        return service.update(id, dto, currentUser);
     }
 
+    /*
+     * Actualización parcial del producto.
+     *
+     * PATCH /api/products/{id}
+     */
     @PatchMapping("/{id}")
-    public ProductResponseDto partialUpdate(@PathVariable Long id, @Valid @RequestBody PartialUpdateProductDto dto) {
-        return service.partialUpdate(id, dto);
+    public ProductResponseDto partialUpdate(
+            @PathVariable Long id,
+            @Valid @RequestBody PartialUpdateProductDto dto,
+            @AuthenticationPrincipal UserDetailsImpl currentUser
+    ) {
+        return service.partialUpdate(id, dto, currentUser);
     }
 
+    /*
+     * Eliminar producto.
+     *
+     * DELETE /api/products/{id}
+     */
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        service.delete(id);
+    public void delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl currentUser
+    ) {
+        service.delete(id, currentUser);
     }
 
-     /*
+    /*
      * Endpoint para buscar productos por id de usuario.
      *
      * GET /products/user/{userId}
@@ -124,5 +160,4 @@ public class ProductsController {
         return service.findByCategoryId(categoryId);
     }
 
-    
 }
