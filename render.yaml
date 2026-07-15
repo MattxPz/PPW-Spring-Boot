@@ -7,10 +7,9 @@ databases:
 services:
   - type: web
     name: pwp67-api
-    env: java
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     plan: free
-    buildCommand: ./gradlew build -x test
-    startCommand: java -Xms256m -Xmx512m -jar build/libs/pwp67-api.jar
     healthCheckPath: /api/actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
