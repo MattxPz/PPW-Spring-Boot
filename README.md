@@ -330,7 +330,7 @@ Autorización: determina qué puedes hacer una vez que ya has sido autenticado. 
 **2. Captura de bloqueo por producto ajeno**
 ![Unaffiliated product block](docs/images/13.2.png)
 
-**3. Captura de eliminación de producto ajeno bloqueada*
+**3. Captura de eliminación de producto ajeno bloqueada**
 ![Deletion of unaffiliated product blocked](docs/images/13.3.png)
 
 **4. Captura de ADMIN modificando producto ajeno**
@@ -351,5 +351,39 @@ No es seguro recibir `userId` en `CreateProductDto` porque un usuario podría mo
 **3) ¿Cuál es la diferencia entre autorización por rol y autorización por ownership?**
 
 La autorización por rol permite o deniega acciones según el rol del usuario. En cambio, la autorización por ownership verifica si el usuario es el propietario del recurso sobre el que intenta realizar una acción, aunque tenga el rol requerido.
+
+---
+
+### Practica 14
+
+- Capturas
+
+**1. Captura de login con refresh token**
+![POST login with refresh token](docs/images/14.1.png)
+
+**2. Captura de refresh exitoso**
+![POST with new refresh token](docs/images/14.2.png)
+
+**3. Captura de logout**
+![Account logout](docs/images/14.3.png)
+
+**4. Captura de refresh después de logout**
+![RefreshToken canceled after logout](docs/images/14.4.png)
+
+- Explicación breve
+
+**1) ¿Cuál es la diferencia entre access token y refresh token?**
+
+El access token es un token de corta duración que se utiliza para autenticar las solicitudes a la API y acceder a los recursos protegidos. En cambio, el refresh token tiene una vida útil más larga y solo se utiliza para obtener un nuevo access token cuando este expira, sin que el usuario tenga que volver a iniciar sesión.
+
+
+**2) ¿Por qué el refresh token no debe usarse en Authorization: Bearer?**
+
+El refresh token no debe enviarse en el encabezado `Authorization: Bearer` porque no está diseñado para acceder a recursos protegidos. Su único propósito es solicitar un nuevo access token, por lo que exponerlo en cada petición aumenta el riesgo de robo y uso indebido.
+
+
+**3) ¿Qué significa rotar un refresh token?**
+
+Rotar un refresh token significa que cada vez que se utiliza para obtener un nuevo access token, el servidor genera también un nuevo refresh token e invalida el anterior. Esto mejora la seguridad, ya que un token robado deja de ser válido después de ser usado.
 
 ---
