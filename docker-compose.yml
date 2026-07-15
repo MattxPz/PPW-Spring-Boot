@@ -37,7 +37,9 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
 
-      DATABASE_URL: jdbc:postgresql://postgres:5432/pwp67_db
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: pwp67_db
       DB_USERNAME: pwp67_user
       DB_PASSWORD: pwp67_password
 

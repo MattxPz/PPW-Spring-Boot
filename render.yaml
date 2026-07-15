@@ -1,26 +1,40 @@
-services:
-  - type: pserv
-    name: pwp67-db
-    env: docker
+databases:
+  - name: pwp67-db
+    databaseName: pwp67_db
+    user: pwp67_user
     plan: free
-    databases:
-      - name: pwp67_db
-        user: pwp67_user
 
+services:
   - type: web
     name: pwp67-api
     env: java
     plan: free
     buildCommand: ./gradlew build -x test
     startCommand: java -Xms256m -Xmx512m -jar build/libs/pwp67-api.jar
-    healthCheckPath: /actuator/health
+    healthCheckPath: /api/actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      - key: DATABASE_URL
+      - key: DB_HOST
         fromDatabase:
           name: pwp67-db
-          property: connectionString
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pwp67-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: pwp67-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: pwp67-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pwp67-db
+          property: password
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRATION
