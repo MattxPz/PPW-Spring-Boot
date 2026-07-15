@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import ec.edu.ups.icc.fundamentos01.security.dtos.AuthResponseDto;
 import ec.edu.ups.icc.fundamentos01.security.dtos.LoginRequestDto;
+import ec.edu.ups.icc.fundamentos01.security.dtos.RefreshTokenRequestDto;
 import ec.edu.ups.icc.fundamentos01.security.dtos.RegisterRequestDto;
 import ec.edu.ups.icc.fundamentos01.security.services.AuthService;
 
@@ -42,5 +43,25 @@ public class AuthController {
         // @Valid valida anotaciones en RegisterRequestDto
         AuthResponseDto response = authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(response); // 201 Created con JWT
+    }
+
+    /**
+     * Refresh - Endpoint público (configurado en SecurityConfig)
+     * POST /auth/refresh
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDto> refresh(@Valid @RequestBody RefreshTokenRequestDto request) {
+        AuthResponseDto response = authService.refresh(request);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Logout - Endpoint público (configurado en SecurityConfig)
+     * POST /auth/logout
+     */
+    @PostMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@Valid @RequestBody RefreshTokenRequestDto request) {
+        authService.logout(request);
     }
 }
