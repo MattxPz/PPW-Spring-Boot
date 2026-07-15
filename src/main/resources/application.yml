@@ -14,11 +14,12 @@ spring:
         password: ups123
     jpa:
         hibernate:
-            ddl-auto: update
+            ddl-auto: validate
         properties:
             hibernate:
                 format_sql: true
                 dialect: org.hibernate.dialect.PostgreSQLDialect
+    
 # ============== CONFIGURACIÓN DE JWT ==============
 jwt:
     # Secret key para firmar tokens (EN PRODUCCIÓN USAR VARIABLE DE ENTORNO)
@@ -38,3 +39,9 @@ jwt:
     
     # Prefijo del token
     prefix: "Bearer "
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

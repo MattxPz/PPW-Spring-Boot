@@ -1,0 +1,25 @@
+spring:
+
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    root: WARN
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:3600000}
+  issuer: fundamentos01-api
+  header: Authorization
+  prefix: "Bearer "
