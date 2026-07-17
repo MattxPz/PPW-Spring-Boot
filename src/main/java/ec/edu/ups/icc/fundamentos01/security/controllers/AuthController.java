@@ -12,6 +12,7 @@ import ec.edu.ups.icc.fundamentos01.security.dtos.LoginRequestDto;
 import ec.edu.ups.icc.fundamentos01.security.dtos.RefreshTokenRequestDto;
 import ec.edu.ups.icc.fundamentos01.security.dtos.RegisterRequestDto;
 import ec.edu.ups.icc.fundamentos01.security.services.AuthService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/auth") // Prefijo para todos los endpoints de autenticación
@@ -38,6 +39,10 @@ public class AuthController {
      * Registro - Endpoint público (configurado en SecurityConfig)
      * POST /auth/register
      */
+    @Tag(
+        name = "Autenticación",
+        description = "Gestión de autenticación y registro de usuarios"
+    )
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
         // @Valid valida anotaciones en RegisterRequestDto

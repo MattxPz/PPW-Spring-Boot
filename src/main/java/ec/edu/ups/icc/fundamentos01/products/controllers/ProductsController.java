@@ -11,14 +11,21 @@ import org.springframework.web.bind.annotation.*;
 import ec.edu.ups.icc.fundamentos01.core.dtos.PaginationDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.CreateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.PartialUpdateProductDto;
-import ec.edu.ups.icc.fundamentos01.products.dtos.UpdateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.dtos.ProductResponseDto;
+import ec.edu.ups.icc.fundamentos01.products.dtos.UpdateProductDto;
 import ec.edu.ups.icc.fundamentos01.products.services.ProductService;
 import ec.edu.ups.icc.fundamentos01.security.services.UserDetailsImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+@Tag(
+    name = "Productos",
+    description = "Gestión de productos con soporte para CRUD, paginación, búsqueda por usuario y categoría, autenticación mediante JWT y control de permisos basado en roles y ownership."
+)
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/products")
 public class ProductsController {
@@ -29,30 +36,43 @@ public class ProductsController {
         this.service = service;
     }
 
-    /*
-     * Controlador REST encargado de exponer endpoints HTTP
-     * para la gestión de productos.
-     */
-
-    /*
-     * Endpoint administrativo.
-     *
-     * GET /api/products
-     *
-     * Devuelve todos los productos activos sin paginación.
-     * Por esa razón, solo debe ser consumido por usuarios ADMIN.
-     *
-     * hasRole('ADMIN') busca internamente ROLE_ADMIN.
-     */
+    @Operation(
+        summary = "Obtener todos los productos",
+        description = """
+                Devuelve la lista completa de productos activos registrados en el sistema.
+                
+                Este endpoint está restringido únicamente para usuarios con el rol ADMIN.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                - Tener el rol ADMIN.
+                
+                No utiliza paginación.
+                """
+    )
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<ProductResponseDto> findAll() {
         return service.findAll();
     }
 
-    /*
-     * Endpoint paginado usando Page.
-     */
+    @Operation(
+        summary = "Obtener productos paginados (Page)",
+        description = """
+                Devuelve los productos utilizando paginación basada en Page de Spring Data.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                Parámetros de consulta:
+                - page: número de página.
+                - size: cantidad de registros por página.
+                - sort: campo y dirección de ordenamiento.
+                
+                La respuesta incluye información de paginación como total de elementos,
+                total de páginas y cantidad de registros.
+                """
+    )
     @GetMapping("/page")
     public Page<ProductResponseDto> findAllPage(
             @Valid @ModelAttribute PaginationDto pagination
@@ -60,11 +80,27 @@ public class ProductsController {
         return service.findAllPage(pagination);
     }
 
-    /*
-    * Endpoint paginado usando Slice.
-    *
-    * Solo devuelve los productos del usuario autenticado.
-    */
+    @Operation(
+        summary = "Obtener productos del usuario autenticado (Slice)",
+        description = """
+                Devuelve únicamente los productos pertenecientes al usuario autenticado
+                utilizando paginación basada en Slice.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                El usuario se obtiene automáticamente desde el token mediante
+                @AuthenticationPrincipal.
+                
+                Parámetros de consulta:
+                - page: número de página.
+                - size: cantidad de registros.
+                - sort: campo de ordenamiento.
+                
+                La respuesta indica si existe una siguiente página, pero no calcula
+                el número total de registros.
+                """
+    )
     @GetMapping("/slice")
     public Slice<ProductResponseDto> findAllSlice(
             @Valid @ModelAttribute PaginationDto pagination,
@@ -73,19 +109,41 @@ public class ProductsController {
         return service.findAllSlice(pagination, currentUser);
     }
 
+    @Operation(
+        summary = "Obtener un producto por ID",
+        description = """
+                Devuelve la información de un producto específico.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                Parámetro de ruta:
+                - id: identificador del producto.
+                
+                Retorna el producto correspondiente si existe.
+                """
+    )
     @GetMapping("/{id}")
     public ProductResponseDto findOne(@Valid @PathVariable Long id) {
         return service.findOne(id);
     }
 
-    /*
-     * Crear producto.
-     *
-     * POST /api/products
-     *
-     * El owner ya no se toma desde el body.
-     * El owner se obtiene desde el token JWT mediante @AuthenticationPrincipal.
-     */
+    @Operation(
+        summary = "Crear un producto",
+        description = """
+                Registra un nuevo producto.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                El propietario del producto NO se envía en el cuerpo de la petición.
+                El usuario propietario se obtiene automáticamente desde el token JWT
+                mediante @AuthenticationPrincipal.
+                
+                El cuerpo de la petición debe contener un objeto CreateProductDto
+                con la información necesaria para crear el producto.
+                """
+    )
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponseDto create(
@@ -95,15 +153,22 @@ public class ProductsController {
         return service.create(dto, currentUser);
     }
 
-    /*
-     * Actualizar producto (reemplazo completo).
-     *
-     * PUT /api/products/{id}
-     *
-     * El usuario autenticado se pasa al service para que este
-     * valide que el producto le pertenece (o que sea ADMIN)
-     * antes de actualizar.
-     */
+    @Operation(
+        summary = "Actualizar completamente un producto",
+        description = """
+                Reemplaza completamente la información de un producto existente.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                - Ser propietario del producto o tener rol ADMIN.
+                
+                Parámetro de ruta:
+                - id: identificador del producto.
+                
+                El cuerpo de la petición debe contener un UpdateProductDto
+                con toda la información del producto.
+                """
+    )
     @PutMapping("/{id}")
     public ProductResponseDto update(
             @PathVariable Long id,
@@ -113,11 +178,22 @@ public class ProductsController {
         return service.update(id, dto, currentUser);
     }
 
-    /*
-     * Actualización parcial del producto.
-     *
-     * PATCH /api/products/{id}
-     */
+    @Operation(
+        summary = "Actualizar parcialmente un producto",
+        description = """
+                Actualiza únicamente los campos enviados del producto.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                - Ser propietario del producto o tener rol ADMIN.
+                
+                Parámetro de ruta:
+                - id: identificador del producto.
+                
+                El cuerpo de la petición debe contener un PartialUpdateProductDto
+                con únicamente los campos que se desean modificar.
+                """
+    )
     @PatchMapping("/{id}")
     public ProductResponseDto partialUpdate(
             @PathVariable Long id,
@@ -127,11 +203,21 @@ public class ProductsController {
         return service.partialUpdate(id, dto, currentUser);
     }
 
-    /*
-     * Eliminar producto.
-     *
-     * DELETE /api/products/{id}
-     */
+    @Operation(
+        summary = "Eliminar un producto",
+        description = """
+                Elimina un producto mediante su identificador.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                - Ser propietario del producto o tener rol ADMIN.
+                
+                Parámetro de ruta:
+                - id: identificador del producto que se desea eliminar.
+                
+                Si la operación es exitosa no devuelve contenido.
+                """
+    )
     @DeleteMapping("/{id}")
     public void delete(
             @PathVariable Long id,
@@ -140,21 +226,39 @@ public class ProductsController {
         service.delete(id, currentUser);
     }
 
-    /*
-     * Endpoint para buscar productos por id de usuario.
-     *
-     * GET /products/user/{userId}
-     */
+    @Operation(
+        summary = "Buscar productos por usuario",
+        description = """
+                Devuelve todos los productos pertenecientes a un usuario específico.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                Parámetro de ruta:
+                - userId: identificador del usuario propietario.
+                
+                Retorna una lista con todos los productos asociados al usuario.
+                """
+    )
     @GetMapping("/user/{userId}")
     public List<ProductResponseDto> findByUserId(@PathVariable Long userId) {
         return service.findByUserId(userId);
     }
 
-    /*
-     * Endpoint para buscar productos por id de categoría.
-     *
-     * GET /products/category/{categoryId}
-     */
+    @Operation(
+        summary = "Buscar productos por categoría",
+        description = """
+                Devuelve todos los productos pertenecientes a una categoría específica.
+                
+                Requisitos:
+                - Estar autenticado mediante JWT.
+                
+                Parámetro de ruta:
+                - categoryId: identificador de la categoría.
+                
+                Retorna una lista con todos los productos registrados en dicha categoría.
+                """
+    )
     @GetMapping("/category/{categoryId}")
     public List<ProductResponseDto> findByCategoryId(@PathVariable Long categoryId) {
         return service.findByCategoryId(categoryId);

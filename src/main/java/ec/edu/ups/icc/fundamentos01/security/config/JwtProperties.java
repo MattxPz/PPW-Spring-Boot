@@ -14,6 +14,7 @@ public class JwtProperties {
     private String header;
     private String prefix;
 
+    // Getters y Setters
     
     public String getSecret() {
         return secret;
@@ -51,10 +52,5 @@ public class JwtProperties {
     public void setPrefix(String prefix) {
         this.prefix = prefix;
     }
-
-    // Getters y Setters
-
-
-    
    
 }
