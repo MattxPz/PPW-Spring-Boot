@@ -1,11 +1,11 @@
-# Proyecto Spring Boot - API de Estudiantes
+# Proyecto Spring Boot
 
 ## Autor
 - Nombre: Mateo Paez
 - Materia: Programación y Plataformas Web
 
 ## Descripcion
-Este proyecto consiste en una API REST desarrollada con Spring Boot para gestionar una lista simple de estudiantes almacenados en memoria. La aplicacion expone endpoints que permiten obtener todos los estudiantes registrados y consultar la cantidad total de estudiantes.
+Este proyecto consiste en un proyecto de SpringBoot de varias practicas de desarrollo, desde la creacion de ENDPOINTS hasta el despliegue de la aplicacion en varias aplicaciones como Render, Ubuntu Server, NGINX.
 
 ## Estructura implementada
 
@@ -385,5 +385,76 @@ El refresh token no debe enviarse en el encabezado `Authorization: Bearer` porqu
 **3) ¿Qué significa rotar un refresh token?**
 
 Rotar un refresh token significa que cada vez que se utiliza para obtener un nuevo access token, el servidor genera también un nuevo refresh token e invalida el anterior. Esto mejora la seguridad, ya que un token robado deja de ser válido después de ser usado.
+
+---
+
+### Practica 15
+
+- Capturas
+**1. Captura de Swagger UI cargado**
+![Swagger UI loaded](docs/images/15.1.png)
+
+**2. Captura del JSON OpenAPI**
+![OpenAPI JSON](docs/images/15.2.png)
+
+**3. Captura de AuthController documentado**
+![AuthController docs](docs/images/15.3.png)
+
+**4. Captura del botón Authorize**
+![Authorize button](docs/images/15.4.png)
+
+**5. Captura de endpoint protegido sin token**
+![Protected endpoint without token](docs/images/15.5.png)
+
+**6. Captura de endpoint protegido con token desde Swagger**
+![Protected endpoint with token](docs/images/15.6.png)
+
+**7. Captura de endpoint ADMIN con usuario normal**
+![Admin endpoint with normal user](docs/images/15.7.png)
+
+**8. Captura de endpoint ADMIN con usuario administrador**
+![Admin endpoint with admin user](docs/images/15.8.png)
+Se realizo en bruno y no en SWAGGER debido al peso de los 20000 productos cargados en postgres
+
+- Explicación breve
+
+**1) ¿Cuál es la diferencia entre Swagger UI y OpenAPI?**
+
+OpenAPI es una especificación estándar que describe cómo está estructurada una API REST (endpoints, parámetros, respuestas, autenticación, etc.). Swagger UI es una herramienta que utiliza esa especificación para generar una interfaz web interactiva donde se puede visualizar y probar la API desde el navegador.
+
+
+**2) ¿Por qué Swagger puede ser público pero los endpoints seguir protegidos?**
+
+Porque Swagger UI solo muestra la documentación de la API. Aunque cualquier usuario pueda acceder a esa documentación, los endpoints siguen siendo protegidos por los mecanismos de seguridad de la aplicación (como JWT o Spring Security). Si un endpoint requiere autenticación, las solicitudes sin un token válido serán rechazadas con un error como 401 Unauthorized.
+
+
+**3) ¿Cómo se configura Swagger para enviar un JWT en Authorization: Bearer?**
+
+Se define un esquema de seguridad de tipo HTTP Bearer en la configuración de OpenAPI y se indica que la API utiliza ese esquema. Luego, en Swagger UI aparece el botón Authorize, donde el usuario ingresa su token JWT. A partir de ese momento, Swagger envía automáticamente el encabezado:
+`Authorization: Bearer <JWT>`
+
+---
+
+### Practica 16
+
+- Capturas
+
+**1. Captura de docker ps de Ubuntu Server mostrando ambos contenedores en ejecución.**
+![Docker ps on Ubuntu Server](docs/images/16.1.png)
+
+**2. Captura de curl de `/api/actuator/health` desde Ubuntu Server**
+![CURL on ubuntu server](docs/images/16.2.png)
+
+**3. Captura de curl de `/api/actuator/health` desde la máquina anfitriona.**
+![CURL on host](docs/images/16.3.png)
+
+**4. Captura consumo de login desde la máquina anfitriona con Bruno o Postman.**
+![Bruno login endpoint](docs/images/16.4.png)
+
+- Explicación breve
+
+**1) Explicación de la conexión a PostgreSQL externo.**
+
+La aplicación Spring Boot, corriendo en un contenedor Docker dentro de Ubuntu Server, se conecta a una instancia de PostgreSQL que corre en un contenedor Docker en la máquina HOST (Windows), publicada en el puerto `5432`. La conexión se realiza a través de la red Host-Only de VirtualBox (`192.168.56.0/24`), usando la IP `192.168.56.1` del HOST como `DB_HOST`. Se verificó la conectividad primero con `psql` desde la VM antes de desplegar el contenedor de la API.
 
 ---
