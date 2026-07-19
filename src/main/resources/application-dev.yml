@@ -1,21 +1,25 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/pwp67_dev
-    username: postgres
-    password: postgres
-  
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/pwp67_dev}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+
   jpa:
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:true}
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${JPA_DDL_AUTO:update}
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 logging:
   level:
-    ec.edu.ups.pwp67: DEBUG
+    root: ${ROOT_LOG_LEVEL:INFO}
+    "[ec.edu.ups.icc.fundamentos01]": ${APP_LOG_LEVEL:DEBUG}
+    "[org.hibernate.SQL]": DEBUG
 
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWT2024MustBeAtLeast256BitsLongForHS256Algorithm}
-  expiration: 3600000
+  expiration: ${JWT_EXPIRATION:3600000}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  issuer: ${JWT_ISSUER:fundamentos01-api}

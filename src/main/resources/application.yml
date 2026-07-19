@@ -1,45 +1,25 @@
-# spring.application.name=fundamentos01
 server:
-    port: 8080
-    servlet:
-        context-path: /api
-
+  port: ${PORT:8080}
+  servlet:
+    context-path: /api
 
 spring:
-    application:
-        name: fundamentos01
-    datasource:
-        url: jdbc:postgresql://localhost:5432/devdb
-        username: ups
-        password: ups123
-    jpa:
-        hibernate:
-            ddl-auto: update
-        properties:
-            hibernate:
-                format_sql: true
-                dialect: org.hibernate.dialect.PostgreSQLDialect
-    
-# ============== CONFIGURACIÓN DE JWT ==============
-jwt:
-    # Secret key para firmar tokens (EN PRODUCCIÓN USAR VARIABLE DE ENTORNO)
-    secret: ${JWT_SECRET:mySecretKeyForJWT2024MustBeAtLeast256BitsLongForHS256Algorithm}
-    
-    # Tiempo de expiración del access token (30 minutos)
-    expiration: 1800000  # 30 minutos en milisegundos
-    
-    # Tiempo de expiración del refresh token (7 días)
-    refresh-expiration: 604800000  # 7 días en milisegundos
-    
-    # Issuer del token
-    issuer: fundamentos01-api
-    
-    # Header donde se envía el token
-    header: Authorization
-    
-    # Prefijo del token
-    prefix: "Bearer "
+  application:
+    name: fundamentos01
+  jpa:
+    properties:
+      hibernate:
+        "[format_sql]": true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
+# ============== CONFIGURACIÓN DE JWT ==============
+# Los valores propios de cada ambiente (secret, expiration, issuer) se
+# definen en application-dev.yml / application-prod.yml, nunca aquí.
+jwt:
+  header: Authorization
+  prefix: "Bearer "
+
+# ============== CONFIGURACIÓN DE MONITOREO ==============
 management:
   endpoints:
     web:

@@ -13,12 +13,16 @@ java {
 	}
 }
 
+tasks.jar {
+    enabled = false
+}
+
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-    // Web y Jackson (Obligatorios y explícitos para solucionar tu error)
+    // Web y Jackson
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.fasterxml.jackson.core:jackson-databind")
