@@ -38,3 +38,7 @@ services:
         generateValue: true
       - key: JWT_EXPIRATION
         value: 3600000
+      - key: JWT_REFRESH_EXPIRATION
+        value: 604800000
+      - key: JWT_ISSUER
+        value: pwp67-api
